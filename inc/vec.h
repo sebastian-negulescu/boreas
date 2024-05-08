@@ -8,6 +8,8 @@ typedef struct vec3 {
     float z;
 } vec3;
 
+typedef vec3 point3;
+
 void init_vec(vec3 *v, const float x, const float y, const float z);
 void init_scalar_vec(vec3 *v, const float s);
 void init_zero_vec(vec3 *v);
@@ -20,6 +22,6 @@ void div_vec(vec3 *v, const float s);
 float dot_vec(const vec3 *v, const vec3 *w);
 vec3 cross_vec(const vec3 *v, const vec3 *w);
 
-char *string_vec(const vec3 *v);
+const char *string_vec(const vec3 *v);
 
 #endif
