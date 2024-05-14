@@ -4,9 +4,11 @@
 #include "vec.h"
 
 typedef struct camera {
-    vec3 up;
     point3 look_from;
     point3 look_at;
+    vec3 up;
+
+    vec3 look_dir;
 } camera;
 
 void init_camera(camera *c, vec3 *up, point3 *look_from, point3 *look_at);
