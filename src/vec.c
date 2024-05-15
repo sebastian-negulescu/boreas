@@ -1,5 +1,9 @@
 #include <assert.h>
 #include <stddef.h>
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "vec.h"
 
 void init_vec(vec3 *v, const float x, const float y, const float z) {
@@ -40,6 +44,15 @@ void div_vec(vec3 *v, const float s) {
     v->y /= s;
     v->z /= s;
 }
+void normalize_vec(vec3 *v) {
+    float magnitude_sqr = (v->x * v->x) + (v->y * v->y) + (v->z * v->z);
+    assert(magnitude_sqr >= 0.f);
+
+    float magnitude = sqrtf(magnitude_sqr);
+    assert(magnitude != 0.f);
+
+    div_vec(v, magnitude);
+}
 
 float dot_vec(const vec3 *v, const vec3 *w) {
     return v->x * w->x 
@@ -55,7 +68,13 @@ vec3 cross_vec(const vec3 *v, const vec3 *w) {
     return r;
 }
 
-const char *string_vec(const vec3 *) {
-    return (char *)NULL;
+const char *string_vec(const vec3 *v) {
+    // [ x, y, z ] (10 digits each) -> 8 + 3 * 21 + 1 (null) = 72
+    size_t str_len = 72;
+    char *vec_str = malloc(str_len * sizeof(char));
+
+    snprintf(vec_str, str_len, "[ %10.10f, %10.10f, %10.10f ]", v->x, v->y, v->z);
+
+    return vec_str;
 }
 

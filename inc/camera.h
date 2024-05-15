@@ -2,13 +2,12 @@
 #define _camera_h_
 
 #include "vec.h"
+#include "ray.h"
 
 typedef struct camera {
-    point3 look_from;
-    point3 look_at;
-    vec3 up;
+    ray look;
 
-    vec3 look_dir;
+    vec3 up;
 } camera;
 
 void init_camera(camera *c, vec3 *up, point3 *look_from, point3 *look_at);
