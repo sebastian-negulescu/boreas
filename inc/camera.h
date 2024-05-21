@@ -8,6 +8,11 @@ typedef struct camera {
     ray look;
 
     vec3 up;
+
+    // unit vectors of camera's frame
+    vec3 u; // y
+    vec3 v; // x
+    vec3 w; // z
 } camera;
 
 void init_camera(camera *c, vec3 *up, point3 *look_from, point3 *look_at);
