@@ -3,12 +3,13 @@
 
 // getters and setters are implicit
 typedef struct vec3 {
-    float x;
-    float y;
-    float z;
+    float x; // r
+    float y; // g
+    float z; // b
 } vec3;
 
 typedef vec3 point3;
+typedef vec3 colour; // don't want to redefine the same stuff just for colour
 
 void init_vec(vec3 *v, const float x, const float y, const float z);
 void init_scalar_vec(vec3 *v, const float s);

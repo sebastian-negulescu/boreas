@@ -4,6 +4,9 @@ boreas
 
 .cache/*
 
+# Image files
+*.ppm
+
 # Mac OS files
 .DS_Store
 
