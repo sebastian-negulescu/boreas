@@ -14,7 +14,7 @@ int main(int, char *[]) {
     init_camera(&c, &look_from, &look_at, &up);
 
     // define image properties
-    image img = {2, 2, "image.ppm"};
+    image img = {20, 20, "image.ppm"};
 
     scene s;
 

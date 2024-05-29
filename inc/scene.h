@@ -1,8 +1,10 @@
 #ifndef _scene_h_
 #define _scene_h_
 
+#include "object.h"
+
 typedef struct scene {
-    bool exists;
+    object *objects;
 } scene;
 
 #endif

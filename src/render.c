@@ -66,6 +66,12 @@ void render(camera *c, scene *s, image *img) {
     FILE *image_file = fopen(img->filename, "w");
     fprintf(image_file, "P3\n%lu %lu\n255\n", width, height);
 
+    // for testing purposes
+    sphere sph;
+    point3 sphere_origin = {0.f, 0.f, 3.f};
+    sph.position = sphere_origin;
+    sph.radius = 1.f;
+
     for (size_t x = 0; x < width; ++x) {
         vec3 x_mod = info.x_mod_base;
         mult_vec(&x_mod, x); 
@@ -90,13 +96,25 @@ void render(camera *c, scene *s, image *img) {
             ray r;
             init_ray(&r, &ray_origin, &ray_direction);
 
-            colour pixel_colour = get_colour(s, &r);
+            colour pixel_colour = get_sphere_colour(&sph, &r);
             fprintf(image_file, "%d %d %d\n", 
-                (int)pixel_colour.x, 
-                (int)pixel_colour.y, 
-                (int)pixel_colour.z);
+                (int)(255.f * pixel_colour.x), 
+                (int)(255.f * pixel_colour.y), 
+                (int)(255.f * pixel_colour.z));
         }
     }
+}
+
+colour get_sphere_colour(sphere *s, ray *r) {
+    intersection i = intersect(s, r);
+    colour c = {0.f, 0.f, 0.f};
+    if (i.hit) {
+        printf("i got hit!\n");
+        c.x = 1.f;
+        c.y = 1.f;
+        c.z = 1.f;
+    }
+    return c;
 }
 
 colour get_colour(scene *s, ray *r) {
