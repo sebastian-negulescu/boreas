@@ -1,6 +1,7 @@
 #include <math.h>
 #include "sphere.h"
 #include "vec.h"
+#include "util.h"
 
 intersection intersect(sphere *s, ray *r) {
     // define intersection to return
@@ -13,16 +14,18 @@ intersection intersect(sphere *s, ray *r) {
     float b = -2.f * dot_vec(&r->direction, &diff);
     float c = -(s->radius * s->radius) + dot_vec(&diff, &diff);
 
-    if (a == 0.f) {
+    if (is_within(a, 0.f, ERROR)) {
         // TODO: or is a really, really small value
         return i;
     }
 
     float discriminant = b * b - 4.f * a * c;
+    if (is_within(discriminant, 0.f, ERROR)) {
+        discriminant = 0.f;
+    }
     if (discriminant < 0.f) {
         return i;
     }
-
 
     float discriminant_sqrt = sqrtf(discriminant);
 
