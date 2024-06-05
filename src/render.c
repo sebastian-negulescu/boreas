@@ -147,12 +147,17 @@ colour get_colour(scene *s, ray *r) {
     }
 
     if (closest_object == NULL) {
+        // going to be the background colour
         return c;
     }
 
+    // need to shade the closest object
+    
+    // testing purposes only
     c.x = closest_distance / 10.f;
     c.y = closest_distance / 10.f;
     c.z = closest_distance / 10.f;
+
     return c;
 }
 
