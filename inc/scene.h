@@ -7,5 +7,7 @@ typedef struct scene {
     object *objects;
 } scene;
 
+void add_object(scene *s, object *o);
+
 #endif
 

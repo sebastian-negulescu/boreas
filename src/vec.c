@@ -45,10 +45,7 @@ void div_vec(vec3 *v, const float s) {
     v->z /= s;
 }
 void normalize_vec(vec3 *v) {
-    float magnitude_sqr = (v->x * v->x) + (v->y * v->y) + (v->z * v->z);
-    assert(magnitude_sqr >= 0.f);
-
-    float magnitude = sqrtf(magnitude_sqr);
+    float magnitude = magnitude_vec(v);
     assert(magnitude != 0.f);
 
     div_vec(v, magnitude);
@@ -58,6 +55,9 @@ float dot_vec(const vec3 *v, const vec3 *w) {
     return v->x * w->x 
         + v->y * w->y 
         + v->z * w->z;
+}
+float magnitude_vec(const vec3 *v) {
+    return sqrtf(dot_vec(v, v));
 }
 vec3 cross_vec(const vec3 *v, const vec3 *w) {
     vec3 r;

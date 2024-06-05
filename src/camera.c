@@ -30,13 +30,13 @@ void init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up) {
     printf("w: %s\n", w_vec_str);
     free((void *)w_vec_str);
 
-    const char *v_vec_str = string_vec(&c->v);
-    printf("v: %s\n", v_vec_str);
-    free((void *)v_vec_str);
-
     const char *u_vec_str = string_vec(&c->u);
     printf("u: %s\n", u_vec_str);
     free((void *)u_vec_str);
+
+    const char *v_vec_str = string_vec(&c->v);
+    printf("v: %s\n", v_vec_str);
+    free((void *)v_vec_str);
     */
 }
 

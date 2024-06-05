@@ -22,6 +22,7 @@ void div_vec(vec3 *v, const float s);
 void normalize_vec(vec3 *v);
 
 float dot_vec(const vec3 *v, const vec3 *w);
+float magnitude_vec(const vec3 *v);
 vec3 cross_vec(const vec3 *v, const vec3 *w);
 
 const char *string_vec(const vec3 *v);

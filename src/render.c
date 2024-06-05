@@ -1,3 +1,4 @@
+// #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "render.h"
@@ -66,26 +67,20 @@ void render(camera *c, scene *s, image *img) {
     FILE *image_file = fopen(img->filename, "w");
     fprintf(image_file, "P3\n%lu %lu\n255\n", width, height);
 
-    // for testing purposes
-    sphere sph;
-    point3 sphere_origin = {0.f, 0.f, 3.f};
-    sph.position = sphere_origin;
-    sph.radius = 1.f;
+    for (size_t y = 0; y < height; ++y) {
+        vec3 y_mod = info.y_mod_base;
+        mult_vec(&y_mod, y);
 
-    for (size_t x = 0; x < width; ++x) {
-        vec3 x_mod = info.x_mod_base;
-        mult_vec(&x_mod, x); 
-        
-        for (size_t y = 0; y < height; ++y) {
-            vec3 y_mod = info.y_mod_base;
-            mult_vec(&y_mod, y);
+        for (size_t x = 0; x < width; ++x) {
+            vec3 x_mod = info.x_mod_base;
+            mult_vec(&x_mod, x); 
 
             ray_direction = info.top_left;
             add_vec(&ray_direction, &x_mod);
             add_vec(&ray_direction, &y_mod);
 
-            /*
             // for testing purposes
+            /*
             const char *vec_str = string_vec(&ray_direction);
             printf("ray direction %s\n", vec_str);
             free((void *)vec_str);
@@ -96,7 +91,7 @@ void render(camera *c, scene *s, image *img) {
             ray r;
             init_ray(&r, &ray_origin, &ray_direction);
 
-            colour pixel_colour = get_sphere_colour(&sph, &r);
+            colour pixel_colour = get_colour(s, &r);
             fprintf(image_file, "%d %d %d\n", 
                 (int)(255.f * pixel_colour.x), 
                 (int)(255.f * pixel_colour.y), 
@@ -119,6 +114,45 @@ colour get_sphere_colour(sphere *s, ray *r) {
 
 colour get_colour(scene *s, ray *r) {
     colour c = {0.f, 0.f, 0.f};
+
+    object *closest_object = NULL;
+    float closest_distance = INFINITY;
+    intersection closest_intersection;
+
+    object *current_object = s->objects;
+    while (current_object != NULL) {
+        switch (current_object->type) {
+            case SPHERE: {
+                sphere *sphere_obj = (sphere *)current_object->object_ptr;
+                intersection i = intersect(sphere_obj, r);
+
+                if (i.hit) {
+                    vec3 distance_vec = r->direction;
+                    mult_vec(&distance_vec, i.t);
+                    float distance_to_origin = magnitude_vec(&distance_vec);
+
+                    if (distance_to_origin < closest_distance && i.t >= 0) {
+                        closest_object = current_object;
+                        closest_distance = distance_to_origin;
+                        closest_intersection = i;
+                    }
+                }
+
+                break;
+            }
+            default: break;
+        }
+
+        current_object = current_object->next_object;
+    }
+
+    if (closest_object == NULL) {
+        return c;
+    }
+
+    c.x = closest_distance / 10.f;
+    c.y = closest_distance / 10.f;
+    c.z = closest_distance / 10.f;
     return c;
 }
 
