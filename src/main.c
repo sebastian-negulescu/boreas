@@ -19,6 +19,13 @@ int main(int, char *[]) {
     scene s;
 
     // for testing purposes
+    emissive e_1;
+    init_vec(&e_1.c, 1.f, 1.f, 1.f);
+
+    material m_1;
+    m_1.type = EMISSIVE;
+    m_1.material_ptr = (void *)&e_1;
+
     sphere sph_1;
     point3 sphere_origin = {0.f, 0.f, 3.f};
     sph_1.position = sphere_origin;
@@ -27,7 +34,15 @@ int main(int, char *[]) {
     object o_1;
     o_1.object_ptr = (void *)&sph_1;
     o_1.type = SPHERE;
+    o_1.material = &m_1;
     add_object(&s, &o_1);
+
+    emissive e_2;
+    init_vec(&e_2.c, 1.f, 0.f, 0.f);
+
+    material m_2;
+    m_2.type = EMISSIVE;
+    m_2.material_ptr = (void *)&e_2;
 
     sphere sph_2;
     sphere_origin.z = 10.f;
@@ -38,6 +53,7 @@ int main(int, char *[]) {
     object o_2;
     o_2.object_ptr = (void *)&sph_2;
     o_2.type = SPHERE;
+    o_2.material = &m_2;
     add_object(&s, &o_2);
 
     /*

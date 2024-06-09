@@ -12,6 +12,8 @@ typedef struct sphere {
 typedef struct intersection {
     bool hit;
     float t;
+    vec3 normal;
+    point3 point;
 } intersection;
 
 // TODO: return an intersection 

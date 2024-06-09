@@ -151,12 +151,17 @@ colour get_colour(scene *s, ray *r) {
         return c;
     }
 
+    // printf("object reference %llu\n", (unsigned long long)closest_object->material);
+
     // need to shade the closest object
+    c = shade_material(closest_object->material, &closest_intersection);
     
     // testing purposes only
+    /*
     c.x = closest_distance / 10.f;
     c.y = closest_distance / 10.f;
     c.z = closest_distance / 10.f;
+    */
 
     return c;
 }

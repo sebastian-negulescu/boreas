@@ -46,6 +46,17 @@ intersection intersect(sphere *s, ray *r) {
 
     i.hit = true;
 
+    point3 p = r->direction;
+    mult_vec(&p, i.t);
+    add_vec(&p, &r->origin);
+
+    vec3 normal = p;
+    sub_vec(&normal, &s->position);
+    normalize_vec(&normal);
+
+    i.normal = normal;
+    i.point = p;
+
     return i;
 }
 
