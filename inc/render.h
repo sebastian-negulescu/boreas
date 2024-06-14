@@ -9,7 +9,7 @@
 
 void render(camera *c, scene *s, image *img); 
 colour get_sphere_colour(sphere *s, ray *r);
-colour get_colour(scene *s, ray *r);
+colour get_colour(scene *s, ray *r, unsigned int num_bounces);
 
 #endif
 

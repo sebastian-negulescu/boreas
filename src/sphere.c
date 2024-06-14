@@ -5,7 +5,7 @@
 
 intersection intersect(sphere *s, ray *r) {
     // define intersection to return
-    intersection i = {false, 0.f};
+    intersection i = {false, 0.f, {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f}};
 
     vec3 diff = s->position;
     sub_vec(&diff, &r->origin);

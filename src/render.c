@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <math.h>
 #include "render.h"
+// #include "material.h"
+
+static const unsigned int MAX_BOUNCES = 3;
 
 struct pane_info {
     point3 top_left;
@@ -91,7 +94,7 @@ void render(camera *c, scene *s, image *img) {
             ray r;
             init_ray(&r, &ray_origin, &ray_direction);
 
-            colour pixel_colour = get_colour(s, &r);
+            colour pixel_colour = get_colour(s, &r, 0);
             fprintf(image_file, "%d %d %d\n", 
                 (int)(255.f * pixel_colour.x), 
                 (int)(255.f * pixel_colour.y), 
@@ -112,7 +115,7 @@ colour get_sphere_colour(sphere *s, ray *r) {
     return c;
 }
 
-colour get_colour(scene *s, ray *r) {
+colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
     colour c = {0.f, 0.f, 0.f};
 
     object *closest_object = NULL;
@@ -154,7 +157,13 @@ colour get_colour(scene *s, ray *r) {
     // printf("object reference %llu\n", (unsigned long long)closest_object->material);
 
     // need to shade the closest object
-    c = shade_material(closest_object->material, &closest_intersection);
+    c = shade_material(closest_object->material, &closest_intersection, r);
+    if (closest_object->material->type != EMISSIVE && num_bounces <= MAX_BOUNCES) {
+        colour other_c = get_colour(s, r, num_bounces + 1);
+        c.x *= other_c.x;
+        c.y *= other_c.y;
+        c.z *= other_c.z;
+    }
     
     // testing purposes only
     /*

@@ -37,12 +37,12 @@ int main(int, char *[]) {
     o_1.material = &m_1;
     add_object(&s, &o_1);
 
-    emissive e_2;
-    init_vec(&e_2.c, 1.f, 0.f, 0.f);
+    diffuse d_2;
+    init_vec(&d_2.albedo, .5f, .5f, .5f);
 
     material m_2;
-    m_2.type = EMISSIVE;
-    m_2.material_ptr = (void *)&e_2;
+    m_2.type = DIFFUSE;
+    m_2.material_ptr = (void *)&d_2;
 
     sphere sph_2;
     sphere_origin.z = 10.f;
