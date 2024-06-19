@@ -1,6 +1,7 @@
 // #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "pi.h"
 #include "render.h"
 // #include "material.h"
 
@@ -19,11 +20,11 @@ void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t heig
     float v_fov = h_fov * aspect_ratio;
 
     // define pane to shoot rays through
-    float pane_width_half = tan(h_fov / 2.f);
+    float pane_width_half = tanf(h_fov / 2.f);
     float pane_width_segment_half = pane_width_half / (float)width;
     float pane_width_segment = pane_width_segment_half * 2.f;
 
-    float pane_height_half = tan(v_fov / 2.f);
+    float pane_height_half = tanf(v_fov / 2.f);
     float pane_height_segment_half = pane_height_half / (float)height;
     float pane_height_segment = pane_height_segment_half * 2.f;
 
@@ -101,13 +102,13 @@ void render(camera *c, scene *s, image *img) {
                 (int)(255.f * pixel_colour.z));
         }
     }
+
 }
 
 colour get_sphere_colour(sphere *s, ray *r) {
     intersection i = intersect(s, r);
     colour c = {0.f, 0.f, 0.f};
     if (i.hit) {
-        printf("i got hit!\n");
         c.x = 1.f;
         c.y = 1.f;
         c.z = 1.f;

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include "pi.h"
 #include "material.h"
 
 colour shade_material(material *m, intersection *i, ray *r) {

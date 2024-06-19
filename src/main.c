@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "vec.h"
 #include "camera.h"
 #include "image.h"
@@ -14,27 +15,24 @@ int main(int, char *[]) {
     init_camera(&c, &look_from, &look_at, &up);
 
     // define image properties
-    image img = {200, 200, "image.ppm"};
+    image img = {1, 1, "image.ppm"};
 
     scene s;
+    init_scene(&s);
 
     // for testing purposes
     emissive e_1;
     init_vec(&e_1.c, 1.f, 1.f, 1.f);
 
     material m_1;
-    m_1.type = EMISSIVE;
-    m_1.material_ptr = (void *)&e_1;
+    init_material(&m_1, EMISSIVE, &e_1);
 
     sphere sph_1;
     point3 sphere_origin = {0.f, 0.f, 3.f};
-    sph_1.position = sphere_origin;
-    sph_1.radius = 1.f;
+    init_sphere(sphere_origin, 1.f);
 
     object o_1;
-    o_1.object_ptr = (void *)&sph_1;
-    o_1.type = SPHERE;
-    o_1.material = &m_1;
+    init_object(&o_1, SPHERE, &sph_1, &m_1);
     add_object(&s, &o_1);
 
     diffuse d_2;
@@ -51,6 +49,7 @@ int main(int, char *[]) {
     sph_2.radius = 5.f;
 
     object o_2;
+    init_object(&o_2);
     o_2.object_ptr = (void *)&sph_2;
     o_2.type = SPHERE;
     o_2.material = &m_2;
