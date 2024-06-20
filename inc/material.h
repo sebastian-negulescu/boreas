@@ -14,6 +14,8 @@ typedef struct material {
     void *material_ptr; 
 } material;
 
+void init_material(material *m, material_type type, void *m_ptr);
+
 colour shade_material(material *m, intersection *i, ray *r);
 
 // TODO: this is NOT physically accurate, needs falloff

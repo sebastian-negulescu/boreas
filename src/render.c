@@ -1,4 +1,5 @@
-// #include <stdlib.h>
+#include <assert.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "pi.h"
@@ -6,6 +7,7 @@
 // #include "material.h"
 
 static const unsigned int MAX_BOUNCES = 3;
+static const unsigned int SAMPLES_PER_PIXEL = 100;
 
 struct pane_info {
     point3 top_left;
@@ -16,7 +18,7 @@ struct pane_info {
 void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height) {
     float aspect_ratio = ((float)width) / ((float)height);
 
-    float h_fov = 90.f * M_PI / 180.f; // horizontal fov in rad
+    float h_fov = 45.f * M_PI / 180.f; // horizontal fov in rad
     float v_fov = h_fov * aspect_ratio;
 
     // define pane to shoot rays through
@@ -95,7 +97,15 @@ void render(camera *c, scene *s, image *img) {
             ray r;
             init_ray(&r, &ray_origin, &ray_direction);
 
-            colour pixel_colour = get_colour(s, &r, 0);
+            colour pixel_colour_aggregate = {0.f, 0.f, 0.f};
+            for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
+                ray sample_ray = r;
+                colour sample_colour = get_colour(s, &sample_ray, 0);
+                add_vec(&pixel_colour_aggregate, &sample_colour);
+            }
+                        
+            colour pixel_colour = pixel_colour_aggregate;
+            div_vec(&pixel_colour, (float)SAMPLES_PER_PIXEL);
             fprintf(image_file, "%d %d %d\n", 
                 (int)(255.f * pixel_colour.x), 
                 (int)(255.f * pixel_colour.y), 
@@ -152,6 +162,11 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
 
     if (closest_object == NULL) {
         // going to be the background colour
+        /*
+        c.x = .5f;
+        c.y = .5f; 
+        c.z = .5f;
+        */
         return c;
     }
 
@@ -159,7 +174,7 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
 
     // need to shade the closest object
     c = shade_material(closest_object->material, &closest_intersection, r);
-    if (closest_object->material->type != EMISSIVE && num_bounces <= MAX_BOUNCES) {
+    if ((closest_object->material->type != EMISSIVE) && (num_bounces < MAX_BOUNCES)) {
         colour other_c = get_colour(s, r, num_bounces + 1);
         c.x *= other_c.x;
         c.y *= other_c.y;
@@ -173,6 +188,7 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
     c.z = closest_distance / 10.f;
     */
 
+    assert(c.x <= 1.f && c.y <= 1.f && c.z <= 1.f);
     return c;
 }
 

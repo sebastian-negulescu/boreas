@@ -16,7 +16,7 @@ typedef struct object {
     struct object *next_object;
 } object;
 
-void init_object(object *o);
+void init_object(object *o, object_type t, void *o_ptr, material *m);
 
 #endif
 

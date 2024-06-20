@@ -9,6 +9,8 @@ typedef struct sphere {
     float radius;
 } sphere;
 
+void init_sphere(sphere *s, point3 *position, float radius);
+
 typedef struct intersection {
     bool hit;
     float t;

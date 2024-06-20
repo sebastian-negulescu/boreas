@@ -3,6 +3,11 @@
 #include "pi.h"
 #include "material.h"
 
+void init_material(material *m, material_type type, void *m_ptr) {
+    m->type = type;
+    m->material_ptr = m_ptr;
+}
+
 colour shade_material(material *m, intersection *i, ray *r) {
     switch (m->type) {
         case EMISSIVE:

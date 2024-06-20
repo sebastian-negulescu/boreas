@@ -3,6 +3,11 @@
 #include "vec.h"
 #include "util.h"
 
+void init_sphere(sphere *s, point3 *position, float radius) {
+    s->position = *position;
+    s->radius = radius;
+}
+
 intersection intersect(sphere *s, ray *r) {
     // define intersection to return
     intersection i = {false, 0.f, {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f}};
@@ -23,6 +28,7 @@ intersection intersect(sphere *s, ray *r) {
     if (is_within(discriminant, 0.f, ERROR)) {
         discriminant = 0.f;
     }
+    // ERROR is epsilon
     if (discriminant < 0.f) {
         return i;
     }
