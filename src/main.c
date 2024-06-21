@@ -25,27 +25,28 @@ int main(int, char *[]) {
     emissive e_1;
     init_vec(&e_1.c, 1.f, 1.f, 1.f);
 
+    diffuse d_2;
+    init_vec(&d_2.albedo, .5f, .5f, .5f);
+
     material m_1;
+    // init_material(&m_1, EMISSIVE, &e_1);
     init_material(&m_1, EMISSIVE, &e_1);
 
     sphere sph_1;
-    point3 sphere_origin = {0.f, 1.5f, 3.f};
-    init_sphere(&sph_1, &sphere_origin, 1.f);
+    point3 sphere_origin = {0.f, 0.f, 1.f};
+    init_sphere(&sph_1, &sphere_origin, 0.5f);
 
     object o_1;
     init_object(&o_1, SPHERE, &sph_1, &m_1);
     add_object(&s, &o_1);
-
-    diffuse d_2;
-    init_vec(&d_2.albedo, .5f, .5f, .5f);
-
+    
     material m_2;
     init_material(&m_2, DIFFUSE, &d_2);
 
-    sphere_origin.z = 3.f;
-    sphere_origin.y = -2.f;
+    sphere_origin.z = 1.f;
+    sphere_origin.y = -100.5f;
     sphere sph_2;
-    init_sphere(&sph_2, &sphere_origin, 2.f);
+    init_sphere(&sph_2, &sphere_origin, 100.f);
 
     object o_2;
     init_object(&o_2, SPHERE, &sph_2, &m_2);

@@ -18,7 +18,7 @@ struct pane_info {
 void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height) {
     float aspect_ratio = ((float)width) / ((float)height);
 
-    float h_fov = 45.f * M_PI / 180.f; // horizontal fov in rad
+    float h_fov = 90.f * M_PI / 180.f; // horizontal fov in rad
     float v_fov = h_fov * aspect_ratio;
 
     // define pane to shoot rays through
@@ -85,13 +85,6 @@ void render(camera *c, scene *s, image *img) {
             add_vec(&ray_direction, &x_mod);
             add_vec(&ray_direction, &y_mod);
 
-            // for testing purposes
-            /*
-            const char *vec_str = string_vec(&ray_direction);
-            printf("ray direction %s\n", vec_str);
-            free((void *)vec_str);
-            */
-
             normalize_vec(&ray_direction);
             
             ray r;
@@ -127,7 +120,12 @@ colour get_sphere_colour(sphere *s, ray *r) {
 }
 
 colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
+    // colour c = {.1f, .3f, .7f};
     colour c = {0.f, 0.f, 0.f};
+
+    if (num_bounces >= MAX_BOUNCES) {
+        return c;
+    }
 
     object *closest_object = NULL;
     float closest_distance = INFINITY;
@@ -162,15 +160,8 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
 
     if (closest_object == NULL) {
         // going to be the background colour
-        /*
-        c.x = .5f;
-        c.y = .5f; 
-        c.z = .5f;
-        */
         return c;
     }
-
-    // printf("object reference %llu\n", (unsigned long long)closest_object->material);
 
     // need to shade the closest object
     c = shade_material(closest_object->material, &closest_intersection, r);
@@ -181,13 +172,6 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
         c.z *= other_c.z;
     }
     
-    // testing purposes only
-    /*
-    c.x = closest_distance / 10.f;
-    c.y = closest_distance / 10.f;
-    c.z = closest_distance / 10.f;
-    */
-
     assert(c.x <= 1.f && c.y <= 1.f && c.z <= 1.f);
     return c;
 }

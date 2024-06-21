@@ -20,7 +20,6 @@ intersection intersect(sphere *s, ray *r) {
     float c = -(s->radius * s->radius) + dot_vec(&diff, &diff);
 
     if (is_within(a, 0.f, ERROR)) {
-        // TODO: or is a really, really small value
         return i;
     }
 
@@ -28,7 +27,6 @@ intersection intersect(sphere *s, ray *r) {
     if (is_within(discriminant, 0.f, ERROR)) {
         discriminant = 0.f;
     }
-    // ERROR is epsilon
     if (discriminant < 0.f) {
         return i;
     }
@@ -45,7 +43,7 @@ intersection intersect(sphere *s, ray *r) {
         i.t = t2;
     }
 
-    if (i.t < 0.f) {
+    if (i.t < ERROR) {
         // intersection is behind us
         return i;
     }
