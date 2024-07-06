@@ -7,6 +7,7 @@
 typedef enum material_type {
     EMISSIVE,
     DIFFUSE,
+    MEDIUM,
 } material_type;
 
 typedef struct material {
