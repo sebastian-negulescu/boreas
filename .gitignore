@@ -1,8 +1,10 @@
 compile_commands.json
 obj/*
 boreas
+tests/camera
 
 .cache/*
+tests/.cache/*
 
 # Image files
 *.ppm

@@ -1,12 +1,12 @@
 CC = clang
 
-INC_DIR = inc
-SRC_DIR = src
+INC_DIR = ../inc
+SRC_DIR = ../src
+TESTS_DIR = .
 OBJ_DIR = obj
 
 VERSION = -std=c2x
-OPTIMIZATION = -O3
-debug: OPTIMIZATION = -O0
+OPTIMIZATION = -O0
 
 CFLAGS = $(VERSION) $(OPTIMIZATION) -Wall -Wextra -Wpedantic -I$(INC_DIR)
 LDFLAGS = -lm
@@ -18,14 +18,10 @@ SOURCES := $(wildcard $(SRC_DIR)/*.c)
 OBJECTS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SOURCES))
 DEPENDS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.d, $(SOURCES))
 
-debug: CFLAGS += -g
-debug: boreas
-
 clean:
-	rm -f boreas
 	rm -rf $(OBJ_DIR)
 
-boreas: main.c $(OBJECTS)
+camera: camera_test.c $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile

@@ -6,12 +6,11 @@
 
 typedef struct camera {
     ray look;
-
     vec3 up;
 
     // unit vectors of camera's frame
-    vec3 u; // y
-    vec3 v; // x
+    vec3 u; // x
+    vec3 v; // y
     vec3 w; // z
 } camera;
 

@@ -1,15 +1,9 @@
 #ifndef _util_h_
 #define _util_h_
 
-float ERROR = 1e-4;
+extern const float ERROR;
 
-bool is_within(float x, float check, float margin) {
-    if (x <= check + margin && x >= check - margin) {
-        return true;
-    }
-
-    return false;
-}
+bool is_within(float x, float check, float margin);
 
 #endif
 
