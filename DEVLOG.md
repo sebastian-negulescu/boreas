@@ -5,8 +5,9 @@
 ### July 6
 
 #### What did I do today?
-- Implemented base for testing
-    - Got camera test frame up
+- Implemented Makefile for `tests/` directory
+- Added `camera_test.c` unit test file
+- Created axis aligned camera test
 
 #### What do I want to do next?
 
