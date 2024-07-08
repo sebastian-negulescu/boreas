@@ -13,30 +13,13 @@ void init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up) {
     init_ray(&(c->look), look_from, &look_dir);
 
     c->w = look_dir;
-    // flip w vector to point backwards (idk why, it shouldn't matter)
-    mult_vec(&c->w, -1.f);
+    // rtiow has w negative, I guess they use z negative being forward
     normalize_vec(&c->w);
 
-    // rtiow has w and up flipped, resulting in negative u
-    c->u = cross_vec(&c->w, up);
+    c->u = cross_vec(up, &c->w);
     normalize_vec(&c->u);
 
-    // rtiow has u and w flipped, resulting in negative v
-    c->v = cross_vec(&c->u, &c->w);
+    c->v = cross_vec(&c->w, &c->u);
     normalize_vec(&c->v);
-
-    /*
-    const char *w_vec_str = string_vec(&c->w);
-    printf("w: %s\n", w_vec_str);
-    free((void *)w_vec_str);
-
-    const char *u_vec_str = string_vec(&c->u);
-    printf("u: %s\n", u_vec_str);
-    free((void *)u_vec_str);
-
-    const char *v_vec_str = string_vec(&c->v);
-    printf("v: %s\n", v_vec_str);
-    free((void *)v_vec_str);
-    */
 }
 
