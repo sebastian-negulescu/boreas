@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
-#include "pi.h"
+#include "util.h"
 #include "material.h"
 
 void init_material(material *m, material_type type, void *m_ptr) {

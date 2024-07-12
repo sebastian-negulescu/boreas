@@ -24,6 +24,9 @@ clean:
 camera: camera_test.c $(OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
+ray_cast: ray_cast_test.c $(OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile
 	@mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@

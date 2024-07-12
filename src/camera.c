@@ -1,8 +1,21 @@
 // #include <stdio.h>
 // #include <stdlib.h>
 #include "camera.h"
+#include "util.h"
 
-void init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up) {
+int init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up) {
+    // check if up vector is 0.
+    if (is_within(magnitude_vec(up), 0.f, ERROR)) {
+        return -1;
+    }
+
+    // check if look from is the same as look at
+    vec3 look_diff = *look_from;
+    sub_vec(&look_diff, look_at);
+    if (is_within(magnitude_vec(&look_diff), 0.f, ERROR)) {
+        return -1;
+    }
+
     c->up = *up;
 
     // get the direction the camera is looking
@@ -21,5 +34,7 @@ void init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up) {
 
     c->v = cross_vec(&c->w, &c->u);
     normalize_vec(&c->v);
+
+    return 0;
 }
 

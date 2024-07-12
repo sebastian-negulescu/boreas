@@ -5,7 +5,7 @@ What should we test?
 How should we test?
 
 ## Categories to Test
-- Camera functionality
+- [x] Camera functionality
 - Casting rays into world
     - Make sure geometry here is correct with FOV 
 - Intersecting rays with spheres

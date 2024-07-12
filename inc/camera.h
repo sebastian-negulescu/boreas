@@ -14,7 +14,7 @@ typedef struct camera {
     vec3 w; // z
 } camera;
 
-void init_camera(camera *c, vec3 *up, point3 *look_from, point3 *look_at);
+int init_camera(camera *c, vec3 *up, point3 *look_from, point3 *look_at);
 
 #endif
 

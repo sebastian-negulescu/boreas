@@ -2,18 +2,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "pi.h"
+#include "util.h"
 #include "render.h"
 // #include "material.h"
 
 static const unsigned int MAX_BOUNCES = 3;
 static const unsigned int SAMPLES_PER_PIXEL = 100;
-
-struct pane_info {
-    point3 top_left;
-    vec3 x_mod_base;
-    vec3 y_mod_base;
-};
 
 void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height) {
     float aspect_ratio = ((float)width) / ((float)height);
@@ -41,7 +35,6 @@ void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t heig
     mult_vec(&pane_y, (pane_height_half - pane_height_segment_half)); 
 
     vec3 pane_z = c->w;
-    mult_vec(&pane_z, -1.f);
 
     add_vec(&top_left, &pane_x);
     add_vec(&top_left, &pane_y);
