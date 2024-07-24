@@ -31,8 +31,11 @@
 
 #### What did I do today?
 - Check FOV is correct
+- Check ray spacing is correct
 - In setting up FOV test, I checked directions are correct
 
 #### What do I want to do next?
-- Whip up a test for ray spacing
+- Test intersections?
+- Start parallelizing code
+- Change allocations to be on heap
 
