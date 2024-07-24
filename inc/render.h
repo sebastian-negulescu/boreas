@@ -13,7 +13,7 @@ struct pane_info {
     vec3 y_mod_base;
 };
 
-void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height);
+void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height, float fov);
 
 void render(camera *c, scene *s, image *img); 
 

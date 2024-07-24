@@ -6,8 +6,8 @@ How should we test?
 
 ## Categories to Test
 - [x] Camera functionality
-- Casting rays into world
-    - Make sure geometry here is correct with FOV 
+- [x] Casting rays into world
+    - [x] Make sure geometry here is correct with FOV 
 - Intersecting rays with spheres
 - Diffuse and luminescent materials
 
@@ -21,4 +21,6 @@ How should we test?
 
 ### Ray Casting
 - Check with known geometry that rays are properly cast into world
+
+### Intersection with Spheres
 

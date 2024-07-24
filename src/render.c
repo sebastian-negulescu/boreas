@@ -9,11 +9,11 @@
 static const unsigned int MAX_BOUNCES = 3;
 static const unsigned int SAMPLES_PER_PIXEL = 100;
 
-void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height) {
+void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height, float fov) {
     float aspect_ratio = ((float)width) / ((float)height);
 
-    float h_fov = 90.f * M_PI / 180.f; // horizontal fov in rad
-    float v_fov = h_fov * aspect_ratio;
+    float h_fov = fov * M_PI / 180.f; // horizontal fov in rad
+    float v_fov = h_fov / aspect_ratio;
 
     // define pane to shoot rays through
     float pane_width_half = tanf(h_fov / 2.f);
@@ -26,13 +26,14 @@ void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t heig
 
     // set up top left of pane we are shooting through
     point3 top_left;
+    init_zero_vec(&top_left);
 
     vec3 pane_x = c->u;
-    mult_vec(&pane_x, (pane_width_half - pane_width_segment_half));
+    mult_vec(&pane_x, pane_width_half);
     mult_vec(&pane_x, -1.f);
 
     vec3 pane_y = c->v;
-    mult_vec(&pane_y, (pane_height_half - pane_height_segment_half)); 
+    mult_vec(&pane_y, pane_height_half); 
 
     vec3 pane_z = c->w;
 
@@ -57,7 +58,7 @@ void render(camera *c, scene *s, image *img) {
     size_t height = img->height;
 
     struct pane_info info;
-    init_pane_info(&info, c, width, height);
+    init_pane_info(&info, c, width, height, 90.f);
 
     // shoot rays
     point3 ray_origin = c->look.origin;
@@ -78,14 +79,25 @@ void render(camera *c, scene *s, image *img) {
             add_vec(&ray_direction, &x_mod);
             add_vec(&ray_direction, &y_mod);
 
-            normalize_vec(&ray_direction);
-            
+            // RAY DIRECTION IS UNNORMALIZED FOR NOW
             ray r;
             init_ray(&r, &ray_origin, &ray_direction);
 
             colour pixel_colour_aggregate = {0.f, 0.f, 0.f};
             for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
                 ray sample_ray = r;
+
+                // jitter ray direction a bit per sample
+                vec3 x_jitter = info.x_mod_base; // will be replaced with random
+                vec3 y_jitter = info.y_mod_base; // will be replaced with random
+                mult_vec(&x_jitter, .5f);
+                mult_vec(&y_jitter, .5f);
+                add_vec(&sample_ray.direction, &x_jitter);
+                add_vec(&sample_ray.direction, &y_jitter);
+
+                // HERE WE NORMALIZE THE DIRECTION VECTOR
+                normalize_vec(&sample_ray.direction);
+
                 colour sample_colour = get_colour(s, &sample_ray, 0);
                 add_vec(&pixel_colour_aggregate, &sample_colour);
             }

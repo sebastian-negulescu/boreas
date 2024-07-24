@@ -27,3 +27,12 @@
     - Check ray spacing is correct
     - Check ray directions are correct
 
+### July 23
+
+#### What did I do today?
+- Check FOV is correct
+- In setting up FOV test, I checked directions are correct
+
+#### What do I want to do next?
+- Whip up a test for ray spacing
+
