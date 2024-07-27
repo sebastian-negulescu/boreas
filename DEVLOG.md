@@ -39,3 +39,10 @@
 - Start parallelizing code
 - Change allocations to be on heap
 
+### July 26
+
+#### What did I do today?
+- Verified application still works
+
+#### What do I want to do next?
+
