@@ -1,6 +1,8 @@
 #ifndef _sphere_h_
 #define _sphere_h_
 
+#include <stdbool.h>
+
 #include "vec.h"
 #include "ray.h"
 
