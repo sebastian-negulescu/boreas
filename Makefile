@@ -9,7 +9,7 @@ OPTIMIZATION = -O3
 debug: OPTIMIZATION = -O0
 
 CFLAGS = $(VERSION) $(OPTIMIZATION) -Wall -Wextra -Wpedantic -I$(INC_DIR)
-LDFLAGS = -lm
+LDFLAGS = -lm -lOpenCL
 
 # Source files and include dirs
 SOURCES := $(wildcard $(SRC_DIR)/*.c)

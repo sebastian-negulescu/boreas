@@ -39,3 +39,16 @@
 - Start parallelizing code
 - Change allocations to be on heap
 
+### July 27
+
+#### What did I do today?
+- Install OpenCL on Arch machine
+- Detect OpenCL devices present
+
+#### What do I want to do next?
+- Create a test kernel module in OpenCL C lang
+    - Add a few nums together?
+    - Matrix multiplication?
+- Figure out how to run kernel on graphics card
+    - [Follow steps](https://github.com/KhronosGroup/OpenCL-Guide/blob/main/chapters/how_does_opencl_work.md)
+
