@@ -2,51 +2,7 @@
 #include <stdlib.h>
 #include <CL/cl.h>
 
-#include "scene.h"
-#include "material.h"
-#include "object.h"
-#include "sphere.h"
-
-// TODO: create a scene parser
-scene generate_scene(void) {
-    scene s;
-    init_scene(&s, 2);
-
-    emissive e_1;
-    init_vec(&e_1.c, 1.f, 1.f, 1.f);
-
-    diffuse d_2;
-    init_vec(&d_2.albedo, .5f, .5f, .5f);
-
-    material m_1;
-    init_material_emissive(&m_1, &e_1);
-
-    sphere sph_1;
-    point3 sphere_origin = {0.f, 0.f, 1.f};
-    init_sphere(&sph_1, &sphere_origin, 0.5f);
-
-    object o_1;
-    init_object_sphere(&o_1, &sph_1, &m_1);
-    add_object(&s, &o_1);
-    
-    material m_2;
-    init_material_diffuse(&m_2, &d_2);
-
-    sphere_origin.z = 1.f;
-    sphere_origin.y = -100.5f;
-    sphere sph_2;
-    init_sphere(&sph_2, &sphere_origin, 100.f);
-
-    object o_2;
-    init_object_sphere(&o_2, &sph_2, &m_2);
-    add_object(&s, &o_2);
-
-    return s;
-}
-
 int main(void) {
-    scene s = generate_scene();
-
     const size_t ROW_SIZE = 3;
     const size_t COL_SIZE = 3;
     const size_t MATRIX_SIZE = ROW_SIZE * COL_SIZE;
@@ -63,7 +19,7 @@ int main(void) {
     cl_uint num_platforms = 0;
     cl_platform_id platform;
 
-    cl_err = clGetPlatformIDs(1, &platform, &num_platforms);
+    cl_err = clGetPlatformIDs( 1, &platform, &num_platforms );
 
     if (cl_err != CL_SUCCESS) {
         return 1;
@@ -88,10 +44,6 @@ int main(void) {
     cl_command_queue queue = clCreateCommandQueueWithProperties(
             context, devices[0], NULL, &cl_err);
 
-    if (cl_err != CL_SUCCESS) {
-        return 1;
-    }
-
     cl_mem mat_a = clCreateBuffer(
             context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, 
             MATRIX_SIZE * sizeof(float), (void *)A, &cl_err);
@@ -101,10 +53,6 @@ int main(void) {
 
     cl_mem mat_c = clCreateBuffer(
             context, CL_MEM_WRITE_ONLY, MATRIX_SIZE * sizeof(float), NULL, &cl_err);
-
-    if (cl_err != CL_SUCCESS) {
-        return 1;
-    }
 
     char *buffer = 0;
     long length;
@@ -159,14 +107,11 @@ int main(void) {
         0, NULL, &kernel_progress);
 
     if (cl_err != CL_SUCCESS) {
+        printf("kernel issues\n");
         return 1;
     }
 
-    cl_err = clWaitForEvents(1, &kernel_progress);
-
-    if (cl_err != CL_SUCCESS) {
-        return 1;
-    }
+    clWaitForEvents(1, &kernel_progress);
 
     float result[ROW_SIZE][COL_SIZE];
     cl_err = clEnqueueReadBuffer(
