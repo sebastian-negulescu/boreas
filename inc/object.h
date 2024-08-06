@@ -9,14 +9,17 @@ typedef enum object_type {
 
 typedef struct object {
     object_type type;
-    void *object_ptr;
+    union {
+        sphere s;
+        // other object types will go here
+    };
+    // void *object_ptr;
 
-    material *material;
-
-    struct object *next_object;
+    material m;
+    // struct object *next_object;
 } object;
 
-void init_object(object *o, object_type t, void *o_ptr, material *m);
+void init_object_sphere(object *o, sphere *s, material *m);
 
 #endif
 

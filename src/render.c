@@ -136,11 +136,12 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
     float closest_distance = INFINITY;
     intersection closest_intersection;
 
-    object *current_object = s->objects;
-    while (current_object != NULL) {
+    object *current_object = NULL;
+    for (size_t i = 0; i < s->free_index; ++i) {
+        current_object = &s->objects[i];
         switch (current_object->type) {
             case SPHERE: {
-                sphere *sphere_obj = (sphere *)current_object->object_ptr;
+                sphere *sphere_obj = &current_object->s;
                 intersection i = intersect(sphere_obj, r);
 
                 if (i.hit) {
@@ -159,8 +160,6 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
             }
             default: break;
         }
-
-        current_object = current_object->next_object;
     }
 
     if (closest_object == NULL) {
@@ -169,8 +168,8 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
     }
 
     // need to shade the closest object
-    c = shade_material(closest_object->material, &closest_intersection, r);
-    if ((closest_object->material->type != EMISSIVE) && (num_bounces < MAX_BOUNCES)) {
+    c = shade_material(&closest_object->m, &closest_intersection, r);
+    if ((closest_object->m.type != EMISSIVE) && (num_bounces < MAX_BOUNCES)) {
         colour other_c = get_colour(s, r, num_bounces + 1);
         c.x *= other_c.x;
         c.y *= other_c.y;

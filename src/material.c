@@ -3,19 +3,24 @@
 #include "util.h"
 #include "material.h"
 
-void init_material(material *m, material_type type, void *m_ptr) {
-    m->type = type;
-    m->material_ptr = m_ptr;
+void init_material_emissive(material *m, emissive *e) {
+    m->type = EMISSIVE;
+    m->e = *e;
+}
+
+void init_material_diffuse(material *m, diffuse *d) {
+    m->type = DIFFUSE;
+    m->d = *d;
 }
 
 colour shade_material(material *m, intersection *i, ray *r) {
     switch (m->type) {
         case EMISSIVE:
-            return shade_emissive((emissive *)m->material_ptr);
+            return shade_emissive(&m->e);
             break;
 
         case DIFFUSE:
-            return shade_diffuse((diffuse *)m->material_ptr, i, r);
+            return shade_diffuse(&m->d, i, r);
             break;
 
         default: break;
