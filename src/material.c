@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <math.h>
+
 #include "util.h"
 #include "material.h"
+#include "vec.h"
 
 void init_material_emissive(material *m, emissive *e) {
     m->type = EMISSIVE;

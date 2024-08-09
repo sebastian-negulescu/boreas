@@ -4,15 +4,15 @@
 #include <math.h>
 #include "util.h"
 #include "render.h"
-// #include "material.h"
+#include "material.h"
 
 static const unsigned int MAX_BOUNCES = 3;
 static const unsigned int SAMPLES_PER_PIXEL = 100;
 
-void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height, float fov) {
+void init_pane(pane *p, camera *c, size_t width, size_t height) {
     float aspect_ratio = ((float)width) / ((float)height);
 
-    float h_fov = fov * M_PI / 180.f; // horizontal fov in rad
+    float h_fov = c->fov * M_PI / 180.f; // horizontal fov in rad
     float v_fov = h_fov / aspect_ratio;
 
     // define pane to shoot rays through
@@ -48,17 +48,17 @@ void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t heig
     mult_vec(&y_mod_base, pane_height_segment);
     mult_vec(&y_mod_base, -1.f);
 
-    info->top_left = top_left;
-    info->x_mod_base = x_mod_base;
-    info->y_mod_base = y_mod_base;
+    p->top_left = top_left;
+    p->x_mod_base = x_mod_base;
+    p->y_mod_base = y_mod_base;
 }
 
 void render(camera *c, scene *s, image *img) {
     size_t width = img->width;
     size_t height = img->height;
 
-    struct pane_info info;
-    init_pane_info(&info, c, width, height, 90.f);
+    pane info;
+    init_pane(&info, c, width, height);
 
     // shoot rays
     point3 ray_origin = c->look.origin;
@@ -137,7 +137,7 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
     intersection closest_intersection;
 
     object *current_object = NULL;
-    for (size_t i = 0; i < s->free_index; ++i) {
+    for (size_t i = 0; i < s->num_objects; ++i) {
         current_object = &s->objects[i];
         switch (current_object->type) {
             case SPHERE: {

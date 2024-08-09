@@ -1,9 +1,10 @@
 #include <math.h>
+#include <CL/cl.h>
 #include "sphere.h"
 #include "vec.h"
 #include "util.h"
 
-void init_sphere(sphere *s, point3 *position, float radius) {
+void init_sphere(sphere *s, point3 *position, cl_float radius) {
     s->position = *position;
     s->radius = radius;
 }
@@ -15,15 +16,15 @@ intersection intersect(sphere *s, ray *r) {
     vec3 diff = s->position;
     sub_vec(&diff, &r->origin);
 
-    float a = dot_vec(&r->direction, &r->direction);
-    float b = -2.f * dot_vec(&r->direction, &diff);
-    float c = -(s->radius * s->radius) + dot_vec(&diff, &diff);
+    cl_float a = dot_vec(&r->direction, &r->direction);
+    cl_float b = -2.f * dot_vec(&r->direction, &diff);
+    cl_float c = -(s->radius * s->radius) + dot_vec(&diff, &diff);
 
     if (is_within(a, 0.f, ERROR)) {
         return i;
     }
 
-    float discriminant = b * b - 4.f * a * c;
+    cl_float discriminant = b * b - 4.f * a * c;
     if (is_within(discriminant, 0.f, ERROR)) {
         discriminant = 0.f;
     }
@@ -31,10 +32,10 @@ intersection intersect(sphere *s, ray *r) {
         return i;
     }
 
-    float discriminant_sqrt = sqrtf(discriminant);
+    cl_float discriminant_sqrt = sqrtf(discriminant);
 
-    float t1 = (-b + discriminant_sqrt) / (2 * a);
-    float t2 = (-b - discriminant_sqrt) / (2 * a);
+    cl_float t1 = (-b + discriminant_sqrt) / (2 * a);
+    cl_float t2 = (-b - discriminant_sqrt) / (2 * a);
 
     i.t = t1;
 

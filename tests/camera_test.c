@@ -17,7 +17,7 @@ void axis_aligned_test() {
     init_vec(&up, 0.f, 1.f, 0.f);
 
     camera c;
-    assert(!init_camera(&c, &look_from, &look_at, &up));
+    assert(!init_camera(&c, &look_from, &look_at, &up, 90.f));
 
     // need to check u, v, w from c
     assert(is_within(magnitude_vec(&c.u), 1.f, ERROR));

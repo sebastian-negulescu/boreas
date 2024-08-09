@@ -3,7 +3,9 @@
 #include "camera.h"
 #include "util.h"
 
-int init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up) {
+int init_camera(camera *c, point3 *look_from, point3 *look_at, vec3 *up, float fov) {
+    c->fov = fov; 
+
     // check if up vector is 0.
     if (is_within(magnitude_vec(up), 0.f, ERROR)) {
         return -1;

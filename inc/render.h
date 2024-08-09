@@ -7,13 +7,13 @@
 #include "scene.h"
 #include "sphere.h"
 
-struct pane_info {
+typedef struct pane {
     point3 top_left;
     vec3 x_mod_base;
     vec3 y_mod_base;
-};
+} pane;
 
-void init_pane_info(struct pane_info *info, camera *c, size_t width, size_t height, float fov);
+void init_pane(pane *p, camera *c, size_t width, size_t height);
 
 void render(camera *c, scene *s, image *img); 
 

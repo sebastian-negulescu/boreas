@@ -2,12 +2,13 @@
 #define _scene_h_
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "object.h"
 
 typedef struct scene {
     object *objects;
     size_t max_objects;
-    size_t free_index;
+    size_t num_objects;
 } scene;
 
 void init_scene(scene *s, size_t n);

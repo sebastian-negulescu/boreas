@@ -1,5 +1,5 @@
-#ifndef _object_h_
-#define _object_h_
+#ifndef _kernel_object_h_
+#define _kernel_object_h_
 
 #include "sphere.h"
 #include "material.h"
@@ -20,7 +20,4 @@ typedef struct object {
     // struct object *next_object;
 } object;
 
-void init_object_sphere(object *o, sphere *s, material *m);
-
 #endif
-

@@ -2,16 +2,17 @@
 #define _sphere_h_
 
 #include <stdbool.h>
+#include <CL/cl.h>
 
 #include "vec.h"
 #include "ray.h"
 
 typedef struct sphere {
     point3 position;
-    float radius;
+    cl_float radius;
 } sphere;
 
-void init_sphere(sphere *s, point3 *position, float radius);
+void init_sphere(sphere *s, point3 *position, cl_float radius);
 
 typedef struct intersection {
     bool hit;

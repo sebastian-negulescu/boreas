@@ -1,11 +1,12 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <CL/cl.h>
 #include "scene.h"
 
 void init_scene(scene *s, size_t n) {
     s->objects = malloc(n * sizeof(object));
     s->max_objects = n;
-    s->free_index = 0;
+    s->num_objects = 0;
 }
 
 void destroy_scene(scene *s) {
@@ -13,13 +14,13 @@ void destroy_scene(scene *s) {
 }
 
 bool add_object(scene *s, object *o) {
-    if (s->free_index >= s->max_objects) {
+    if (s->num_objects >= s->max_objects) {
         return false;
     }
 
     // deep-copy object o into s->objects array
     // will this deep copy?
-    s->objects[s->free_index++] = *o;
+    s->objects[s->num_objects++] = *o;
 
     return true;
 }

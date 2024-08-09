@@ -13,7 +13,7 @@ void modification_test() {
     vec3 up = {0.f, 1.f, 0.f};
 
     camera c;
-    init_camera(&c, &look_from, &look_at, &up);
+    init_camera(&c, &look_from, &look_at, &up, 90.f);
 
     struct pane_info test_pane;
     init_pane_info(&test_pane, &c, 600, 400, 90.f);
