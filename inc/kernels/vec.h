@@ -1,7 +1,7 @@
 #ifndef _kernel_vec_h_
 #define _kernel_vec_h_
 
-typedef struct vec3 {
+typedef struct __attribute__ ((packed)) vec3 {
     float x;
     float y;
     float z;

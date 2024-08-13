@@ -11,15 +11,15 @@ typedef enum material_type {
 } material_type;
 
 // TODO: this is NOT physically accurate, needs falloff
-typedef struct emissive {
+typedef struct __attribute__ ((packed)) emissive {
     colour c;
 } emissive;
 
-typedef struct diffuse {
+typedef struct __attribute__ ((packed)) diffuse {
     colour albedo;
 } diffuse;
 
-typedef struct material {
+typedef struct __attribute__ ((packed)) material {
     material_type type;
     union {
         emissive e;

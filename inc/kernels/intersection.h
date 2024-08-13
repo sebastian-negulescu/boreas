@@ -3,7 +3,7 @@
 
 #include "vec.h"
 
-typedef struct intersection {
+typedef struct __attribute__ ((packed)) intersection {
     bool hit;
     float t;
     vec3 normal;

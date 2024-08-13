@@ -3,7 +3,7 @@
 
 #include "vec.h"
 
-typedef struct pane {
+typedef struct __attribute__ ((packed)) pane {
     point3 top_left;
     vec3 x_mod_base;
     vec3 y_mod_base;

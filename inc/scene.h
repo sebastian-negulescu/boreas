@@ -8,7 +8,7 @@
 typedef struct scene {
     object *objects;
     size_t max_objects;
-    size_t num_objects;
+    cl_uint num_objects;
 } scene;
 
 void init_scene(scene *s, size_t n);

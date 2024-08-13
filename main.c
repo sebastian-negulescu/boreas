@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <CL/cl.h>
 
+#include "string.h"
 #include "scene.h"
 #include "material.h"
 #include "object.h"
@@ -47,6 +48,83 @@ scene generate_scene(void) {
     return s;
 }
 
+ray *generate_camera_rays(camera *c, image *img, pane *p) {
+    size_t width = img->width;
+    size_t height = img->height;
+
+    ray *camera_rays = malloc(width * height * img->samples * sizeof(ray));
+    if (camera_rays != NULL) {
+        // shoot rays
+        point3 ray_origin = c->look.o;
+        vec3 ray_direction;
+
+        for (size_t y = 0; y < height; ++y) {
+            vec3 y_mod = p->y_mod_base;
+            mult_vec(&y_mod, y);
+
+            for (size_t x = 0; x < width; ++x) {
+                vec3 x_mod = p->x_mod_base;
+                mult_vec(&x_mod, x); 
+
+                ray_direction = p->top_left;
+                add_vec(&ray_direction, &x_mod);
+                add_vec(&ray_direction, &y_mod);
+
+                // RAY DIRECTION IS UNNORMALIZED FOR NOW
+                ray r;
+                init_ray(&r, &ray_origin, &ray_direction);
+
+                for (size_t sample = 0; sample < img->samples; ++sample) {
+                    ray sample_ray = r;
+
+                    // jitter ray direction a bit per sample
+                    vec3 x_jitter = p->x_mod_base; 
+                    vec3 y_jitter = p->y_mod_base;
+                    mult_vec(&x_jitter, .5f); // will be replaced with random
+                    mult_vec(&y_jitter, .5f); // will be replaced with random
+                    add_vec(&sample_ray.d, &x_jitter);
+                    add_vec(&sample_ray.d, &y_jitter);
+
+                    // HERE WE NORMALIZE THE DIRECTION VECTOR
+                    normalize_vec(&sample_ray.d);
+
+                    init_ray(&camera_rays[
+                            y * width * img->samples + 
+                            x * img->samples + 
+                            sample
+                        ], 
+                        &sample_ray.o, &sample_ray.d);
+                }
+            }
+        }
+    }
+
+    return camera_rays;
+}
+
+char *read_file(const char *path) {
+    char *file_buffer = NULL;
+    long length;
+    FILE *f = fopen(path, "rb"); //"", "rb");
+    if (f) {
+        // get file length
+        fseek(f, 0, SEEK_END);
+        length = ftell(f);
+        fseek(f, 0, SEEK_SET);
+
+        // read file into string
+        file_buffer = malloc(length);
+        if (file_buffer) {
+            fread(file_buffer, 1, length, f);
+        }
+        fclose(f);
+    } else {
+        return NULL;
+    }
+
+    return file_buffer;
+}
+
 int main(void) {
     point3 look_from;
     point3 look_at;
@@ -59,12 +137,13 @@ int main(void) {
     camera c;
     init_camera(&c, &look_from, &look_at, &up, 90.f);
 
-    image img = {200, 200, "image.ppm"};
+    image img = {200, 200, 1024, "image.ppm"};
 
     pane p;
     init_pane(&p, &c, img.width, img.height);
     
     scene s = generate_scene();
+    ray *camera_rays = generate_camera_rays(&c, &img, &p);
 
     cl_int cl_err = CL_SUCCESS;
 
@@ -100,46 +179,48 @@ int main(void) {
         return 1;
     }
 
-    // needs to be swapped
+    cl_mem camera_ray_buffer = clCreateBuffer(
+        context, 
+        CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY,
+        img.width * img.height * img.samples * sizeof(ray), 
+        (void *)camera_rays, 
+        &cl_err
+    );
     cl_mem objects_buffer = clCreateBuffer(
-            context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, 
-            s.num_objects * sizeof(object), (void *)s.objects, &cl_err);
+        context, 
+        CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, 
+        s.num_objects * sizeof(object), 
+        (void *)s.objects, 
+        &cl_err
+    );
+    intersection *intersections = malloc(img.width * img.height * img.samples * sizeof(intersection));
+    cl_mem intersections_buffer = clCreateBuffer(
+        context, 
+        CL_MEM_COPY_HOST_PTR | CL_MEM_READ_WRITE,
+        img.width * img.height * img.samples * sizeof(intersection), 
+        (void *)intersections, 
+        &cl_err
+    );
 
     if (cl_err != CL_SUCCESS) {
+        printf("some bad, bad buffers\n");
         return 1;
     }
 
-    char *file_buffer = 0;
-    long length;
-    FILE *f = fopen("src/kernels/colour.cl", "rb");
-    if (f) {
-        // get file length
-        fseek(f, 0, SEEK_END);
-        length = ftell(f);
-        fseek(f, 0, SEEK_SET);
+    const char *program_file_buffer = read_file("src/kernels/intersect_scene.cl");
+    const char *program_strings[1] = {program_file_buffer};
+    // program_file_buffer is OPTIONALLY null-terminated, so we use regular strlen
+    size_t lengths[1] = {strlen(program_file_buffer)};
 
-        // read file into string
-        file_buffer = malloc(length);
-        if (file_buffer) {
-            fread(file_buffer, 1, length, f);
-        }
-        fclose(f);
-    } else {
-        return 1;
-    }
-
-    const char *program_strings[1] = {file_buffer};
-    size_t lengths[1] = {length};
-
-    cl_program colour_path_program = clCreateProgramWithSource(
+    cl_program intersect_scene_program = clCreateProgramWithSource(
         context, 1, program_strings, lengths, &cl_err);
 
-    cl_err = clBuildProgram(colour_path_program, 1, devices, "-I./inc/kernels", NULL, NULL);
+    cl_err = clBuildProgram(intersect_scene_program, 1, devices, "-I./inc/kernels", NULL, NULL);
 
     if (cl_err != CL_SUCCESS) {
         char error_msg[2048];
         clGetProgramBuildInfo(
-            colour_path_program, 
+            intersect_scene_program, 
             devices[num_devices - 1], 
             CL_PROGRAM_BUILD_LOG, 
             2048, 
@@ -150,38 +231,47 @@ int main(void) {
         return 1;
     }
 
-    cl_kernel colour_path_kernel = clCreateKernel(
-        colour_path_program, "colour_path", &cl_err); 
+    cl_kernel intersect_scene_kernel = clCreateKernel(
+        intersect_scene_program, "intersect_scene", &cl_err); 
 
     if (cl_err != CL_SUCCESS) {
+        printf("couldn't make the kernel\n");
         return 1;
     }
 
-    // to construct ray direction from camera given work index
-    cl_err = clSetKernelArg(colour_path_kernel, 0, sizeof(vec3), &c.look.origin);
-    cl_err = clSetKernelArg(colour_path_kernel, 1, sizeof(pane), &p);
+    // we just need to give the rays and objects to the kernel
+    // don't need to include num rays
+    cl_err = clSetKernelArg(intersect_scene_kernel, 0, sizeof(cl_mem), &camera_ray_buffer);
     // to loop through objects
-    cl_err = clSetKernelArg(colour_path_kernel, 2, sizeof(size_t), &s.num_objects);
-    cl_err = clSetKernelArg(colour_path_kernel, 3, sizeof(cl_mem), &objects_buffer);
+    cl_err = clSetKernelArg(intersect_scene_kernel, 1, sizeof(cl_uint), &s.num_objects);
+    cl_err = clSetKernelArg(intersect_scene_kernel, 2, sizeof(cl_mem), &objects_buffer);
+    cl_err = clSetKernelArg(intersect_scene_kernel, 3, sizeof(cl_mem), &intersections_buffer);
 
     if (cl_err != CL_SUCCESS) {
+        printf("problem setting args???\n");
         return 1;
     }
 
     cl_event kernel_progress;
-    const size_t global_work_size[] = {img.width, img.height};
-    const size_t local_work_size[] = {1, 1};
+    const size_t global_work_size[] = {img.width * img.height * img.samples};
+    const size_t local_work_size[] = {1};
     cl_err = clEnqueueNDRangeKernel(
-        queue, colour_path_kernel, 2, NULL, global_work_size, local_work_size, 
+        queue, intersect_scene_kernel, 1, NULL, global_work_size, local_work_size, 
         0, NULL, &kernel_progress);
 
     if (cl_err != CL_SUCCESS) {
+        printf("there were some issues... %d\n", cl_err);
         return 1;
     }
 
     cl_err = clWaitForEvents(1, &kernel_progress);
 
+    free((void *)program_file_buffer);
+    free(camera_rays);
+    free(intersections);
+
     if (cl_err != CL_SUCCESS) {
+        printf("there were some issues...\n");
         return 1;
     }
 

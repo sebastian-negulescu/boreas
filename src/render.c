@@ -7,7 +7,6 @@
 #include "material.h"
 
 static const unsigned int MAX_BOUNCES = 3;
-static const unsigned int SAMPLES_PER_PIXEL = 100;
 
 void init_pane(pane *p, camera *c, size_t width, size_t height) {
     float aspect_ratio = ((float)width) / ((float)height);
@@ -53,66 +52,6 @@ void init_pane(pane *p, camera *c, size_t width, size_t height) {
     p->y_mod_base = y_mod_base;
 }
 
-void render(camera *c, scene *s, image *img) {
-    size_t width = img->width;
-    size_t height = img->height;
-
-    pane info;
-    init_pane(&info, c, width, height);
-
-    // shoot rays
-    point3 ray_origin = c->look.origin;
-    vec3 ray_direction;
-
-    FILE *image_file = fopen(img->filename, "w");
-    fprintf(image_file, "P3\n%lu %lu\n255\n", width, height);
-
-    for (size_t y = 0; y < height; ++y) {
-        vec3 y_mod = info.y_mod_base;
-        mult_vec(&y_mod, y);
-
-        for (size_t x = 0; x < width; ++x) {
-            vec3 x_mod = info.x_mod_base;
-            mult_vec(&x_mod, x); 
-
-            ray_direction = info.top_left;
-            add_vec(&ray_direction, &x_mod);
-            add_vec(&ray_direction, &y_mod);
-
-            // RAY DIRECTION IS UNNORMALIZED FOR NOW
-            ray r;
-            init_ray(&r, &ray_origin, &ray_direction);
-
-            colour pixel_colour_aggregate = {0.f, 0.f, 0.f};
-            for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
-                ray sample_ray = r;
-
-                // jitter ray direction a bit per sample
-                vec3 x_jitter = info.x_mod_base; // will be replaced with random
-                vec3 y_jitter = info.y_mod_base; // will be replaced with random
-                mult_vec(&x_jitter, .5f);
-                mult_vec(&y_jitter, .5f);
-                add_vec(&sample_ray.direction, &x_jitter);
-                add_vec(&sample_ray.direction, &y_jitter);
-
-                // HERE WE NORMALIZE THE DIRECTION VECTOR
-                normalize_vec(&sample_ray.direction);
-
-                colour sample_colour = get_colour(s, &sample_ray, 0);
-                add_vec(&pixel_colour_aggregate, &sample_colour);
-            }
-                        
-            colour pixel_colour = pixel_colour_aggregate;
-            div_vec(&pixel_colour, (float)SAMPLES_PER_PIXEL);
-            fprintf(image_file, "%d %d %d\n", 
-                (int)(255.f * pixel_colour.x), 
-                (int)(255.f * pixel_colour.y), 
-                (int)(255.f * pixel_colour.z));
-        }
-    }
-
-}
-
 colour get_sphere_colour(sphere *s, ray *r) {
     intersection i = intersect(s, r);
     colour c = {0.f, 0.f, 0.f};
@@ -145,7 +84,7 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
                 intersection i = intersect(sphere_obj, r);
 
                 if (i.hit) {
-                    vec3 distance_vec = r->direction;
+                    vec3 distance_vec = r->d;
                     mult_vec(&distance_vec, i.t);
                     float distance_to_origin = magnitude_vec(&distance_vec);
 

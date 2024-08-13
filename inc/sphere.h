@@ -7,14 +7,14 @@
 #include "vec.h"
 #include "ray.h"
 
-typedef struct sphere {
+typedef struct __attribute__ ((packed)) sphere {
     point3 position;
     cl_float radius;
 } sphere;
 
 void init_sphere(sphere *s, point3 *position, cl_float radius);
 
-typedef struct intersection {
+typedef struct __attribute__ ((packed)) intersection {
     bool hit;
     float t;
     vec3 normal;

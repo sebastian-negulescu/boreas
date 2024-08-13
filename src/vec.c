@@ -22,6 +22,11 @@ void init_zero_vec(vec3 *v) {
     v->y = 0.f;
     v->z = 0.f;
 }
+void copy_vec(vec3 *v, vec3 *w) {
+    v->x = w->x;
+    v->y = w->y;
+    v->z = w->z;
+}
 
 void add_vec(vec3 *v, const vec3 *w) {
     v->x += w->x;

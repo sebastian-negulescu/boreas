@@ -59,8 +59,7 @@ colour shade_diffuse(diffuse *m, intersection *i, ray *r) {
     sub_vec(&bounce_dir, &i->point);
     normalize_vec(&bounce_dir);
 
-    r->origin = i->point;
-    r->direction = bounce_dir;
+    init_ray(r, &i->point, &bounce_dir);
 
     return m->albedo;
 }

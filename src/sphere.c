@@ -14,10 +14,10 @@ intersection intersect(sphere *s, ray *r) {
     intersection i = {false, 0.f, {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f}};
 
     vec3 diff = s->position;
-    sub_vec(&diff, &r->origin);
+    sub_vec(&diff, &r->o);
 
-    cl_float a = dot_vec(&r->direction, &r->direction);
-    cl_float b = -2.f * dot_vec(&r->direction, &diff);
+    cl_float a = dot_vec(&r->d, &r->d);
+    cl_float b = -2.f * dot_vec(&r->d, &diff);
     cl_float c = -(s->radius * s->radius) + dot_vec(&diff, &diff);
 
     if (is_within(a, 0.f, ERROR)) {
@@ -51,9 +51,9 @@ intersection intersect(sphere *s, ray *r) {
 
     i.hit = true;
 
-    point3 p = r->direction;
+    point3 p = r->d;
     mult_vec(&p, i.t);
-    add_vec(&p, &r->origin);
+    add_vec(&p, &r->o);
 
     vec3 normal = p;
     sub_vec(&normal, &s->position);

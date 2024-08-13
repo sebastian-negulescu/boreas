@@ -3,12 +3,12 @@
 
 #include "vec.h"
 
-typedef struct ray {
-    point3 origin;
-    vec3 direction;
+typedef struct __attribute__ ((packed)) ray {
+    point3 o;
+    vec3 d;
 } ray;
 
-void init_ray(ray *r, point3 *origin, vec3 *direction);
+void init_ray(ray *r, point3 *o, vec3 *d);
 
 #endif
 

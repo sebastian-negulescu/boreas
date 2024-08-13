@@ -8,7 +8,7 @@ typedef enum object_type {
     SPHERE,
 } object_type;
 
-typedef struct object {
+typedef struct __attribute__ ((packed)) object {
     object_type type;
     union {
         sphere s;
