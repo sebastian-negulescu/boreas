@@ -5,7 +5,6 @@
 #include <CL/cl.h>
 
 #include "vec.h"
-#include "ray.h"
 
 typedef struct __attribute__ ((packed)) sphere {
     point3 position;
@@ -15,17 +14,11 @@ typedef struct __attribute__ ((packed)) sphere {
 void init_sphere(sphere *s, point3 *position, cl_float radius);
 
 typedef struct __attribute__ ((packed)) intersection {
-    bool hit;
-    float t;
+    cl_uchar hit;
+    cl_float t;
     vec3 normal;
     point3 point;
 } intersection;
-
-// TODO: return an intersection 
-// or return bool and modify t 
-// or return void and modify struct?
-// i think there will only be one intersection function, so naming is ok
-intersection intersect(sphere *s, ray *r);
 
 #endif
 

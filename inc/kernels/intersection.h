@@ -4,7 +4,7 @@
 #include "vec.h"
 
 typedef struct __attribute__ ((packed)) intersection {
-    bool hit;
+    unsigned char hit;
     float t;
     vec3 normal;
     point3 point;

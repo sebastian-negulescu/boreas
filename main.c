@@ -33,18 +33,6 @@ scene generate_scene(void) {
     init_object_sphere(&o_1, &sph_1, &m_1);
     add_object(&s, &o_1);
     
-    material m_2;
-    init_material_diffuse(&m_2, &d_2);
-
-    sphere_origin.z = 1.f;
-    sphere_origin.y = -100.5f;
-    sphere sph_2;
-    init_sphere(&sph_2, &sphere_origin, 100.f);
-
-    object o_2;
-    init_object_sphere(&o_2, &sph_2, &m_2);
-    add_object(&s, &o_2);
-
     return s;
 }
 
@@ -55,18 +43,21 @@ ray *generate_camera_rays(camera *c, image *img, pane *p) {
     ray *camera_rays = malloc(width * height * img->samples * sizeof(ray));
     if (camera_rays != NULL) {
         // shoot rays
-        point3 ray_origin = c->look.o;
+        point3 ray_origin;
+        copy_vec(&ray_origin, &c->look.o);
         vec3 ray_direction;
 
         for (size_t y = 0; y < height; ++y) {
-            vec3 y_mod = p->y_mod_base;
+            vec3 y_mod;
+            copy_vec(&y_mod, &p->y_mod_base);
             mult_vec(&y_mod, y);
 
             for (size_t x = 0; x < width; ++x) {
-                vec3 x_mod = p->x_mod_base;
+                vec3 x_mod;
+                copy_vec(&x_mod, &p->x_mod_base);
                 mult_vec(&x_mod, x); 
 
-                ray_direction = p->top_left;
+                copy_vec(&ray_direction, &p->top_left);
                 add_vec(&ray_direction, &x_mod);
                 add_vec(&ray_direction, &y_mod);
 
@@ -88,12 +79,14 @@ ray *generate_camera_rays(camera *c, image *img, pane *p) {
                     // HERE WE NORMALIZE THE DIRECTION VECTOR
                     normalize_vec(&sample_ray.d);
 
-                    init_ray(&camera_rays[
+                    init_ray(
+                        &camera_rays[
                             y * width * img->samples + 
                             x * img->samples + 
                             sample
                         ], 
-                        &sample_ray.o, &sample_ray.d);
+                        &sample_ray.o, &sample_ray.d
+                    );
                 }
             }
         }
@@ -105,7 +98,7 @@ ray *generate_camera_rays(camera *c, image *img, pane *p) {
 char *read_file(const char *path) {
     char *file_buffer = NULL;
     long length;
-    FILE *f = fopen(path, "rb"); //"", "rb");
+    FILE *f = fopen(path, "rb");
     if (f) {
         // get file length
         fseek(f, 0, SEEK_END);
@@ -113,9 +106,10 @@ char *read_file(const char *path) {
         fseek(f, 0, SEEK_SET);
 
         // read file into string
-        file_buffer = malloc(length);
+        file_buffer = malloc((length + 1) * sizeof(char));
         if (file_buffer) {
-            fread(file_buffer, 1, length, f);
+            fread(file_buffer, sizeof(char), length, f);
+            file_buffer[length] = '\0';
         }
         fclose(f);
     } else {
@@ -137,13 +131,16 @@ int main(void) {
     camera c;
     init_camera(&c, &look_from, &look_at, &up, 90.f);
 
-    image img = {200, 200, 1024, "image.ppm"};
+    image img = {1000, 1000, 1, "image.ppm"};
 
     pane p;
     init_pane(&p, &c, img.width, img.height);
     
     scene s = generate_scene();
     ray *camera_rays = generate_camera_rays(&c, &img, &p);
+    if (camera_rays == NULL) {
+        printf("issue with generating camera rays\n");
+    }
 
     cl_int cl_err = CL_SUCCESS;
 
@@ -193,7 +190,9 @@ int main(void) {
         (void *)s.objects, 
         &cl_err
     );
-    intersection *intersections = malloc(img.width * img.height * img.samples * sizeof(intersection));
+    intersection *intersections = malloc(
+        img.width * img.height * img.samples * sizeof(intersection)
+    );
     cl_mem intersections_buffer = clCreateBuffer(
         context, 
         CL_MEM_COPY_HOST_PTR | CL_MEM_READ_WRITE,
@@ -209,21 +208,21 @@ int main(void) {
 
     const char *program_file_buffer = read_file("src/kernels/intersect_scene.cl");
     const char *program_strings[1] = {program_file_buffer};
-    // program_file_buffer is OPTIONALLY null-terminated, so we use regular strlen
-    size_t lengths[1] = {strlen(program_file_buffer)};
+    // program_file_buffer is OPTIONALLY null-terminated
+    size_t lengths[1] = {strlen(program_file_buffer) + 1};
 
     cl_program intersect_scene_program = clCreateProgramWithSource(
         context, 1, program_strings, lengths, &cl_err);
 
-    cl_err = clBuildProgram(intersect_scene_program, 1, devices, "-I./inc/kernels", NULL, NULL);
+    cl_err = clBuildProgram(intersect_scene_program, 1, devices, "-I./inc", NULL, NULL);
 
     if (cl_err != CL_SUCCESS) {
-        char error_msg[2048];
+        char error_msg[4096];
         clGetProgramBuildInfo(
             intersect_scene_program, 
             devices[num_devices - 1], 
             CL_PROGRAM_BUILD_LOG, 
-            2048, 
+            4096, 
             error_msg, 
             NULL
         ); 
@@ -266,14 +265,34 @@ int main(void) {
 
     cl_err = clWaitForEvents(1, &kernel_progress);
 
-    free((void *)program_file_buffer);
-    free(camera_rays);
-    free(intersections);
-
     if (cl_err != CL_SUCCESS) {
         printf("there were some issues...\n");
         return 1;
     }
+
+    // read back intersections buffer into intersections
+    cl_err = clEnqueueReadBuffer(queue, intersections_buffer, CL_TRUE, 0,
+        img.width * img.height * img.samples * sizeof(intersection), intersections,
+        0, NULL, NULL);
+
+    FILE *image_file = fopen(img.filename, "w");
+    fprintf(image_file, "P3\n%lu %lu\n255\n", img.width, img.height);
+    for (size_t i = 0; i < img.height; ++i) {
+        for (size_t j = 0; j < img.width; ++j) {
+            if ((intersections[i * img.width * img.samples + j * img.samples].hit & 1)) {
+                fprintf(image_file, "%d %d %d\n", 255, 255, 255);
+            } else {
+                fprintf(image_file, "%d %d %d\n", 0, 0, 0);
+            }
+        }
+    }
+    fclose(image_file);
+
+    // make sure you free all the memory, might need to do this before
+    free((void *)program_file_buffer);
+    free(camera_rays);
+    free(intersections);
+    destroy_scene(&s);
 
     printf("finished!\n");
     return 0;

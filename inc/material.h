@@ -2,6 +2,7 @@
 #define _material_h_
 
 #include "vec.h"
+#include "ray.h"
 #include "sphere.h"
 
 typedef enum material_type {

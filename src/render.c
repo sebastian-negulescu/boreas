@@ -52,17 +52,6 @@ void init_pane(pane *p, camera *c, size_t width, size_t height) {
     p->y_mod_base = y_mod_base;
 }
 
-colour get_sphere_colour(sphere *s, ray *r) {
-    intersection i = intersect(s, r);
-    colour c = {0.f, 0.f, 0.f};
-    if (i.hit) {
-        c.x = 1.f;
-        c.y = 1.f;
-        c.z = 1.f;
-    }
-    return c;
-}
-
 colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
     // colour c = {.1f, .3f, .7f};
     colour c = {0.f, 0.f, 0.f};
@@ -81,7 +70,7 @@ colour get_colour(scene *s, ray *r, unsigned int num_bounces) {
         switch (current_object->type) {
             case SPHERE: {
                 sphere *sphere_obj = &current_object->s;
-                intersection i = intersect(sphere_obj, r);
+                intersection i; // = intersect(sphere_obj, r);
 
                 if (i.hit) {
                     vec3 distance_vec = r->d;
