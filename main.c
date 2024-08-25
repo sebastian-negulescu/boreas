@@ -9,7 +9,7 @@
 #include "sphere.h"
 #include "camera.h"
 #include "image.h"
-#include "render.h"
+#include "pane.h"
 
 // TODO: create a scene parser
 scene generate_scene(void) {

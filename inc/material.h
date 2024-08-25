@@ -3,7 +3,7 @@
 
 #include "vec.h"
 #include "ray.h"
-#include "sphere.h"
+#include "intersection.h"
 
 typedef enum material_type {
     EMISSIVE,
@@ -11,7 +11,6 @@ typedef enum material_type {
     MEDIUM,
 } material_type;
 
-// TODO: this is NOT physically accurate, needs falloff
 typedef struct __attribute__ ((packed)) emissive {
     colour c;
 } emissive;
