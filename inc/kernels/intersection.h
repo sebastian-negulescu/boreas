@@ -8,6 +8,8 @@ typedef struct __attribute__ ((packed)) intersection {
     float t;
     vec3 normal;
     point3 point;
+
+    unsigned int object_ind;
 } intersection;
 
 #endif
