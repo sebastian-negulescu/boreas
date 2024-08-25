@@ -16,22 +16,36 @@ scene generate_scene(void) {
     scene s;
     init_scene(&s, 2);
 
+    // create emissive sphere
     emissive e_1;
     init_vec(&e_1.c, 1.f, 1.f, 1.f);
-
-    diffuse d_2;
-    init_vec(&d_2.albedo, .5f, .5f, .5f);
 
     material m_1;
     init_material_emissive(&m_1, &e_1);
 
-    sphere sph_1;
-    point3 sphere_origin = {0.f, 0.f, 1.f};
-    init_sphere(&sph_1, &sphere_origin, 0.5f);
+    sphere sphere_1;
+    point3 sphere_origin;
+    init_vec(&sphere_origin, 0.f, 0.f, 1.f);
+    init_sphere(&sphere_1, &sphere_origin, 0.5f);
 
     object o_1;
-    init_object_sphere(&o_1, &sph_1, &m_1);
+    init_object_sphere(&o_1, &sphere_1, &m_1);
     add_object(&s, &o_1);
+
+    // create diffuse sphere
+    diffuse d_1;
+    init_vec(&d_1.albedo, .5f, .5f, .5f);
+
+    material m_2;
+    init_material_diffuse(&m_2, &d_1);
+
+    sphere sphere_2;
+    init_vec(&sphere_origin, 0.f, -101.f, 1.f); 
+    init_sphere(&sphere_2, &sphere_origin, 100.f);
+   
+    object o_2;
+    init_object_sphere(&o_2, &sphere_2, &m_2);
+    add_object(&s, &o_2);
     
     return s;
 }

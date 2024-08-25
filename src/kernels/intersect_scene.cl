@@ -4,6 +4,7 @@
 #include "kernels/ray.h"
 #include "kernels/util.h"
 
+
 __kernel void intersect_scene(
     __global ray *rays, 
     unsigned int num_objects, 
@@ -12,25 +13,24 @@ __kernel void intersect_scene(
 ) {
     const size_t ray_ind = get_global_id(0);
 
-    float3 origin = (float3)(rays[ray_ind].o.x, rays[ray_ind].o.y, rays[ray_ind].o.z);
-    float3 direction = (float3)(rays[ray_ind].d.x, rays[ray_ind].d.y, rays[ray_ind].d.z);
+    float3 origin = get_vec(rays[ray_ind].o);
+    float3 direction = get_vec(rays[ray_ind].d);
 
     intersections[ray_ind].hit = false;
     for (size_t i = 0; i < num_objects; ++i) {
-        float3 position = (float3)(
-            scene[i].s.position.x,
-            scene[i].s.position.y,
-            scene[i].s.position.z
-        );
+        intersection curr_inter;
+        curr_inter.hit = false;
+
+        float3 position = get_vec(scene[i].s.position);     
+        float radius = scene[i].s.radius;
         float3 diff = position;
         diff = diff - origin;
 
         float a = dot(direction, direction);
         float b = -2.f * dot(direction, diff);
-        float c = -(scene[i].s.radius * scene[i].s.radius) + dot(diff, diff);
+        float c = -(radius * radius) + dot(diff, diff);
 
         if (is_within(a, 0.f, ERROR)) {
-            printf("");
             continue;
         }
 
@@ -47,33 +47,37 @@ __kernel void intersect_scene(
         float t1 = (-b + discriminant_sqrt) / (2 * a);
         float t2 = (-b - discriminant_sqrt) / (2 * a);
 
-        intersections[ray_ind].t = t1;
+        curr_inter.t = t1;
 
         if (t2 < t1 && t2 >= 0.f) {
-            intersections[ray_ind].t = t2;
+            curr_inter.t = t2;
         }
 
-        if (intersections[ray_ind].t < ERROR) {
+        if (curr_inter.t < ERROR) {
             continue;
         }
 
-        intersections[ray_ind].hit = true;
+        // doesn't matter
+        curr_inter.hit = true;
 
         float3 p = direction;
-        p = p * intersections[ray_ind].t;
+        p = p * curr_inter.t;
         p += origin;
 
         float3 normal = p;
         normal = normal - position;
         normal = normalize(normal);
 
-        intersections[ray_ind].normal.x = normal.x;
-        intersections[ray_ind].normal.y = normal.y;
-        intersections[ray_ind].normal.z = normal.z;
+        set_private_vec(&curr_inter.normal, normal);
+        set_private_vec(&curr_inter.point, p);
 
-        intersections[ray_ind].point.x = p.x;
-        intersections[ray_ind].point.y = p.y;
-        intersections[ray_ind].point.z = p.z;
+        // update intersection if necessary
+        if (!intersections[ray_ind].hit || curr_inter.t < intersections[ray_ind].t) {
+            intersections[ray_ind].hit = true;
+            intersections[ray_ind].t = curr_inter.t;
+            copy_global_vec(&intersections[ray_ind].normal, &curr_inter.normal);
+            copy_global_vec(&intersections[ray_ind].point, &curr_inter.point);
+        }
     }
 }
 

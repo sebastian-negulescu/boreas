@@ -1,7 +1,7 @@
 #ifndef _kernel_util_h_
 #define _kernel_util_h_
 
-const float ERROR = 1e-4;
+__constant float ERROR = 1e-4;
 
 inline bool is_within(float x, float check, float margin) {
     if (x <= check + margin && x >= check - margin) {
