@@ -1,5 +1,23 @@
 # Design
 
-## High Level Loop
-- Boilerplate setting up
+## Overview
+
+## Setup
+- Scene
+- Camera
+- Camera rays
+
+### Buffers
+- Rays
+- Intersections
+- Colours
+- Scene objects
+
+### Kernels
+- Scene intersection
+
+#### Shaders
+- Diffuse
+- Emissive
+- Medium
 
