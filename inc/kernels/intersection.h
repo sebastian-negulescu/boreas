@@ -9,7 +9,7 @@ typedef struct __attribute__ ((packed)) intersection {
     vec3 normal;
     point3 point;
 
-    unsigned int object_ind;
+    unsigned int object_ptr;
 } intersection;
 
 #endif

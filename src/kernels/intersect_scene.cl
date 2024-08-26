@@ -18,8 +18,8 @@ __kernel void intersect_scene(
 
     intersections[ray_ind].hit = false;
     for (size_t i = 0; i < num_objects; ++i) {
-        intersection curr_inter;
-        curr_inter.hit = false;
+        intersection obj_istn;
+        obj_istn.hit = false;
 
         float3 position = get_vec(scene[i].s.position);     
         float radius = scene[i].s.radius;
@@ -47,36 +47,39 @@ __kernel void intersect_scene(
         float t1 = (-b + discriminant_sqrt) / (2 * a);
         float t2 = (-b - discriminant_sqrt) / (2 * a);
 
-        curr_inter.t = t1;
+        obj_istn.t = t1;
 
         if (t2 < t1 && t2 >= 0.f) {
-            curr_inter.t = t2;
+            obj_istn.t = t2;
         }
 
-        if (curr_inter.t < ERROR) {
+        if (obj_istn.t < ERROR) {
             continue;
         }
 
         // doesn't matter
-        curr_inter.hit = true;
+        obj_istn.hit = true;
 
         float3 p = direction;
-        p = p * curr_inter.t;
+        p = p * obj_istn.t;
         p += origin;
 
         float3 normal = p;
         normal = normal - position;
         normal = normalize(normal);
 
-        set_private_vec(&curr_inter.normal, normal);
-        set_private_vec(&curr_inter.point, p);
+        set_private_vec(&obj_istn.normal, normal);
+        set_private_vec(&obj_istn.point, p);
 
         // update intersection if necessary
-        if (!intersections[ray_ind].hit || curr_inter.t < intersections[ray_ind].t) {
+        if (!intersections[ray_ind].hit || obj_istn.t < intersections[ray_ind].t) {
             intersections[ray_ind].hit = true;
-            intersections[ray_ind].t = curr_inter.t;
-            copy_global_vec(&intersections[ray_ind].normal, &curr_inter.normal);
-            copy_global_vec(&intersections[ray_ind].point, &curr_inter.point);
+            intersections[ray_ind].t = obj_istn.t;
+
+            copy_global_vec(&intersections[ray_ind].normal, &obj_istn.normal);
+            copy_global_vec(&intersections[ray_ind].point, &obj_istn.point);
+
+            intersections[ray_ind].object_ptr = i;
         }
     }
 }

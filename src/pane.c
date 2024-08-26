@@ -48,3 +48,62 @@ void init_pane(pane *p, camera *c, size_t width, size_t height) {
     p->y_mod_base = y_mod_base;
 }
 
+ray *generate_camera_rays(camera *c, image *img, pane *p) {
+    size_t width = img->width;
+    size_t height = img->height;
+
+    ray *camera_rays = malloc(width * height * img->samples * sizeof(ray));
+    if (camera_rays != NULL) {
+        // shoot rays
+        point3 ray_origin;
+        copy_vec(&ray_origin, &c->look.o);
+        vec3 ray_direction;
+
+        for (size_t y = 0; y < height; ++y) {
+            vec3 y_mod;
+            copy_vec(&y_mod, &p->y_mod_base);
+            mult_vec(&y_mod, y);
+
+            for (size_t x = 0; x < width; ++x) {
+                vec3 x_mod;
+                copy_vec(&x_mod, &p->x_mod_base);
+                mult_vec(&x_mod, x); 
+
+                copy_vec(&ray_direction, &p->top_left);
+                add_vec(&ray_direction, &x_mod);
+                add_vec(&ray_direction, &y_mod);
+
+                // RAY DIRECTION IS UNNORMALIZED FOR NOW
+                ray r;
+                init_ray(&r, &ray_origin, &ray_direction);
+
+                for (size_t sample = 0; sample < img->samples; ++sample) {
+                    ray sample_ray = r;
+
+                    // jitter ray direction a bit per sample
+                    vec3 x_jitter = p->x_mod_base; 
+                    vec3 y_jitter = p->y_mod_base;
+                    mult_vec(&x_jitter, .5f); // will be replaced with random
+                    mult_vec(&y_jitter, .5f); // will be replaced with random
+                    add_vec(&sample_ray.d, &x_jitter);
+                    add_vec(&sample_ray.d, &y_jitter);
+
+                    // HERE WE NORMALIZE THE DIRECTION VECTOR
+                    normalize_vec(&sample_ray.d);
+
+                    init_ray(
+                        &camera_rays[
+                            y * width * img->samples + 
+                            x * img->samples + 
+                            sample
+                        ], 
+                        &sample_ray.o, &sample_ray.d
+                    );
+                }
+            }
+        }
+    }
+
+    return camera_rays;
+}
+

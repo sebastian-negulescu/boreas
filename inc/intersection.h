@@ -10,7 +10,7 @@ typedef struct __attribute__ ((packed)) intersection {
     vec3 normal;
     point3 point;
 
-    cl_uint object_ind;
+    cl_uint object_ptr;
 } intersection;
 
 #endif
