@@ -10,6 +10,9 @@
 #include "camera.h"
 #include "image.h"
 #include "pane.h"
+#include "cl_helpers.h"
+
+const size_t MAX_BOUNCES = 1;
 
 // TODO: create a scene parser
 scene generate_scene(void) {
@@ -50,29 +53,6 @@ scene generate_scene(void) {
     return s;
 }
 
-char *read_file(const char *path) {
-    char *file_buffer = NULL;
-    long length;
-    FILE *f = fopen(path, "rb");
-    if (f) {
-        // get file length
-        fseek(f, 0, SEEK_END);
-        length = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
-        // read file into string
-        file_buffer = malloc((length + 1) * sizeof(char));
-        if (file_buffer) {
-            fread(file_buffer, sizeof(char), length, f);
-            file_buffer[length] = '\0';
-        }
-        fclose(f);
-    } else {
-        return NULL;
-    }
-
-    return file_buffer;
-}
 
 int main(void) {
     point3 look_from;
@@ -155,104 +135,106 @@ int main(void) {
         (void *)intersections, 
         &cl_err
     );
+    colour *ray_colours = malloc(img.width * img.height * img.samples * sizeof(colour));
+    for (size_t i = 0; i < img.width * img.height * img.samples; ++i) {
+        init_vec(&ray_colours[i], 1.f, 1.f, 1.f);
+    }
+    cl_mem colours_buffer = clCreateBuffer(
+        context,
+        CL_MEM_COPY_HOST_PTR | CL_MEM_READ_WRITE,
+        img.width * img.height * img.samples * sizeof(colour),
+        (void *)ray_colours,
+        &cl_err
+    );
 
     if (cl_err != CL_SUCCESS) {
         printf("some bad, bad buffers\n");
         return 1;
     }
 
-    const char *program_file_buffer = read_file("src/kernels/intersect_scene.cl");
-    const char *program_strings[1] = {program_file_buffer};
-    // program_file_buffer is OPTIONALLY null-terminated
-    size_t lengths[1] = {strlen(program_file_buffer) + 1};
+    cl_kernel intersect_scene_kernel;
+    cl_err = compile_kernel(
+        &intersect_scene_kernel,
+        "intersect_scene",
+        "src/kernels/intersect_scene.cl",
+        &context,
+        num_devices,
+        devices
+    );
 
-    cl_program intersect_scene_program = clCreateProgramWithSource(
-        context, 1, program_strings, lengths, &cl_err);
+    cl_kernel emissive_material_kernel;
+    cl_err = compile_kernel(
+        &emissive_material_kernel,
+        "shade_emissive",
+        "src/kernels/materials/emissive.cl",
+        &context,
+        num_devices,
+        devices
+    );
 
-    cl_err = clBuildProgram(intersect_scene_program, 1, devices, "-I./inc", NULL, NULL);
+    for (size_t i = 0; i < MAX_BOUNCES; ++i) {
+        // we just need to give the rays and objects to the kernel
+        // don't need to include num rays
+        cl_err = clSetKernelArg(intersect_scene_kernel, 0, sizeof(cl_mem), &camera_ray_buffer);
+        cl_err = clSetKernelArg(intersect_scene_kernel, 1, sizeof(cl_uint), &s.num_objects);
+        cl_err = clSetKernelArg(intersect_scene_kernel, 2, sizeof(cl_mem), &objects_buffer);
+        cl_err = clSetKernelArg(intersect_scene_kernel, 3, sizeof(cl_mem), &intersections_buffer);
 
-    if (cl_err != CL_SUCCESS) {
-        char error_msg[4096];
-        clGetProgramBuildInfo(
-            intersect_scene_program, 
-            devices[num_devices - 1], 
-            CL_PROGRAM_BUILD_LOG, 
-            4096, 
-            error_msg, 
-            NULL
-        ); 
-        printf("%s\n", error_msg);
-        return 1;
+        if (cl_err != CL_SUCCESS) {
+            printf("problem setting args???\n");
+            return 1;
+        }
+
+        cl_event kernel_progress;
+        const size_t global_work_size[] = {img.width * img.height * img.samples};
+        const size_t local_work_size[] = {1};
+        cl_err = clEnqueueNDRangeKernel(
+            queue, intersect_scene_kernel, 1, NULL, global_work_size, local_work_size, 
+            0, NULL, &kernel_progress);
+
+        if (cl_err != CL_SUCCESS) {
+            printf("there were some issues... %d\n", cl_err);
+            return 1;
+        }
+
+        cl_err = clWaitForEvents(1, &kernel_progress);
+
+        if (cl_err != CL_SUCCESS) {
+            printf("there were some issues...\n");
+            return 1;
+        }
+
+        // read back intersections buffer into intersections
+        cl_err = clEnqueueReadBuffer(queue, intersections_buffer, CL_TRUE, 0,
+            img.width * img.height * img.samples * sizeof(intersection), intersections,
+            0, NULL, NULL);
+
+        // shade ray based on what each one hit
     }
-
-    cl_kernel intersect_scene_kernel = clCreateKernel(
-        intersect_scene_program, "intersect_scene", &cl_err); 
-
-    if (cl_err != CL_SUCCESS) {
-        printf("couldn't make the kernel\n");
-        return 1;
-    }
-
-    // we just need to give the rays and objects to the kernel
-    // don't need to include num rays
-    cl_err = clSetKernelArg(intersect_scene_kernel, 0, sizeof(cl_mem), &camera_ray_buffer);
-    // to loop through objects
-    cl_err = clSetKernelArg(intersect_scene_kernel, 1, sizeof(cl_uint), &s.num_objects);
-    cl_err = clSetKernelArg(intersect_scene_kernel, 2, sizeof(cl_mem), &objects_buffer);
-    cl_err = clSetKernelArg(intersect_scene_kernel, 3, sizeof(cl_mem), &intersections_buffer);
-
-    if (cl_err != CL_SUCCESS) {
-        printf("problem setting args???\n");
-        return 1;
-    }
-
-    cl_event kernel_progress;
-    const size_t global_work_size[] = {img.width * img.height * img.samples};
-    const size_t local_work_size[] = {1};
-    cl_err = clEnqueueNDRangeKernel(
-        queue, intersect_scene_kernel, 1, NULL, global_work_size, local_work_size, 
-        0, NULL, &kernel_progress);
-
-    if (cl_err != CL_SUCCESS) {
-        printf("there were some issues... %d\n", cl_err);
-        return 1;
-    }
-
-    cl_err = clWaitForEvents(1, &kernel_progress);
-
-    if (cl_err != CL_SUCCESS) {
-        printf("there were some issues...\n");
-        return 1;
-    }
-
-    // read back intersections buffer into intersections
-    cl_err = clEnqueueReadBuffer(queue, intersections_buffer, CL_TRUE, 0,
-        img.width * img.height * img.samples * sizeof(intersection), intersections,
-        0, NULL, NULL);
-
-    // now what??? need to shade somehow
-    // create colour for each ray
-    colour *ray_colours = malloc(img.width * img.height * img.samples * sizeof(colour));
-    for (size_t i = 0; i < img.width * img.height * img.samples; ++i) {
-        init_vec(&ray_colours[i], 1.f, 1.f, 1.f);
-    }
-
+ 
     FILE *image_file = fopen(img.filename, "w");
     fprintf(image_file, "P3\n%lu %lu\n255\n", img.width, img.height);
     for (size_t i = 0; i < img.height; ++i) {
         for (size_t j = 0; j < img.width; ++j) {
-            if ((intersections[i * img.width * img.samples + j * img.samples].hit & 1)) {
-                cl_uint hit_obj = intersections[i * img.width * img.samples + j * img.samples].object_ptr + 1;
-                fprintf(image_file, "%d %d %d\n", 50 * hit_obj, 50 * hit_obj, 50 * hit_obj);
-            } else {
-                fprintf(image_file, "%d %d %d\n", 0, 0, 0);
+            colour pixel;
+            init_zero_vec(&pixel);
+            for (size_t k = 0; k < img.samples; ++k) {
+                add_vec(
+                    &pixel, 
+                    &ray_colours[i * img.width * img.samples + j * img.samples + k]
+                );
             }
+            mult_vec(&pixel, 1.f / ((float)img.samples));
+            fprintf(image_file, "%d %d %d\n",
+                (int)(255.999 * pixel.x),
+                (int)(255.999 * pixel.y),
+                (int)(255.999 * pixel.z)
+            );
         }
     }
     fclose(image_file);
 
     // make sure you free all the memory, might need to do this before
-    free((void *)program_file_buffer);
     free(camera_rays);
     free(ray_colours);
     free(intersections);
