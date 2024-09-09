@@ -67,6 +67,7 @@ int main(void) {
     init_camera(&c, &look_from, &look_at, &up, 90.f);
 
     image img = {1000, 1000, 1, "image.ppm"};
+    const size_t NUM_RAYS = img.width * img.height * img.samples;
 
     pane p;
     init_pane(&p, &c, img.width, img.height);
@@ -114,10 +115,11 @@ int main(void) {
     cl_mem camera_ray_buffer = clCreateBuffer(
         context, 
         CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY,
-        img.width * img.height * img.samples * sizeof(ray), 
+        NUM_RAYS * sizeof(ray), 
         (void *)camera_rays, 
         &cl_err
     );
+
     cl_mem objects_buffer = clCreateBuffer(
         context, 
         CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, 
@@ -125,30 +127,53 @@ int main(void) {
         (void *)s.objects, 
         &cl_err
     );
+
     intersection *intersections = malloc(
-        img.width * img.height * img.samples * sizeof(intersection)
+        NUM_RAYS * sizeof(intersection)
     );
     cl_mem intersections_buffer = clCreateBuffer(
         context, 
         CL_MEM_COPY_HOST_PTR | CL_MEM_READ_WRITE,
-        img.width * img.height * img.samples * sizeof(intersection), 
+        NUM_RAYS * sizeof(intersection), 
         (void *)intersections, 
         &cl_err
     );
-    colour *ray_colours = malloc(img.width * img.height * img.samples * sizeof(colour));
-    for (size_t i = 0; i < img.width * img.height * img.samples; ++i) {
+
+    colour *ray_colours = malloc(NUM_RAYS * sizeof(colour));
+    for (size_t i = 0; i < NUM_RAYS; ++i) {
         init_vec(&ray_colours[i], 1.f, 1.f, 1.f);
     }
     cl_mem colours_buffer = clCreateBuffer(
         context,
         CL_MEM_COPY_HOST_PTR | CL_MEM_READ_WRITE,
-        img.width * img.height * img.samples * sizeof(colour),
+        NUM_RAYS * sizeof(colour),
         (void *)ray_colours,
+        &cl_err
+    );
+
+    cl_mem material_queue_buffer = clCreateBuffer(
+        context,
+        CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY,
+        NUM_RAYS * sizeof(size_t),
+        NULL,
         &cl_err
     );
 
     if (cl_err != CL_SUCCESS) {
         printf("some bad, bad buffers\n");
+        return 1;
+    }
+
+    size_t *emissive_queue = malloc(NUM_RAYS * sizeof(size_t));
+    size_t *diffuse_queue = malloc(NUM_RAYS * sizeof(size_t));
+    size_t *medium_queue = malloc(NUM_RAYS * sizeof(size_t));
+
+    size_t emissive_queue_ind = 0;
+    size_t diffuse_queue_ind = 0;
+    size_t medium_queue_ind = 0;
+
+    if (emissive_queue == NULL || diffuse_queue == NULL || medium_queue == NULL) {
+        printf("queue allocation problem!\n");
         return 1;
     }
 
@@ -209,7 +234,41 @@ int main(void) {
             img.width * img.height * img.samples * sizeof(intersection), intersections,
             0, NULL, NULL);
 
+        // reset all shader queue indices
+        emissive_queue_ind = 0;
+        diffuse_queue_ind = 0;
+        medium_queue_ind = 0;
+
         // shade ray based on what each one hit
+        for (size_t j = 0; j < img.width * img.height * img.samples; ++j) {
+            if (!intersections[j].hit) {
+                mult_vec(&ray_colours[j], 0);
+                continue;
+            }
+
+            size_t hit_object_ind = intersections[j].object_ptr;
+            // add ray index based on material type
+            switch (s.objects[hit_object_ind].m.type) {
+                case EMISSIVE:
+                    emissive_queue[emissive_queue_ind++] = j;
+                    break;
+
+                case DIFFUSE:
+                    diffuse_queue[diffuse_queue_ind++] = j;
+                    break;
+
+                case MEDIUM:
+                    medium_queue[medium_queue_ind++] = j;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // call all shader kernels
+        cl_err = clSetKernelArg(emissive_material_kernel, 0, sizeof(cl_mem), &camera_ray_buffer);
+
     }
  
     FILE *image_file = fopen(img.filename, "w");
@@ -238,6 +297,9 @@ int main(void) {
     free(camera_rays);
     free(ray_colours);
     free(intersections);
+    free(emissive_queue);
+    free(diffuse_queue);
+    free(medium_queue);
     destroy_scene(&s);
 
     printf("finished!\n");
